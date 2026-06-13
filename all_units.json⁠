@@ -160,4 +160,21 @@
     { "unit": 10, "eng": "community", "ch": "社區" },
     { "unit": 10, "eng": "content", "ch": "滿足的；內容" },
     { "unit": 10, "eng": "correct", "ch": "正確的；改正" }
+[
+  { "book": "b1", "unit": 1, "eng": "bankrupt", "ch": "破產的" },
+  { "book": "b1", "unit": 1, "eng": "boast", "ch": "自誇" },
+  { "book": "b1", "unit": 1, "eng": "complicate", "ch": "使複雜" },
+  { "book": "b1", "unit": 1, "eng": "confidence", "ch": "信心；自信" },
+  { "book": "b1", "unit": 1, "eng": "dispute", "ch": "爭論；辯論" },
+  { "book": "b1", "unit": 2, "eng": "adventure", "ch": "冒險" },
+  { "book": "b1", "unit": 2, "eng": "appliance", "ch": "電器" },
+  { "book": "b1", "unit": 2, "eng": "assist", "ch": "幫助" },
+  { "book": "b1", "unit": 3, "eng": "accuse", "ch": "指控" },
+  { "book": "b1", "unit": 3, "eng": "appreciate", "ch": "欣賞" },
+  { "book": "b1", "unit": 7, "eng": "acquire", "ch": "獲得" },
+  { "book": "b1", "unit": 8, "eng": "academic", "ch": "學術的" },
+  { "book": "b1", "unit": 9, "eng": "actual", "ch": "事實上的" },
+  { "book": "b1", "unit": 10, "eng": "accept", "ch": "接受" }
+]
+
 ]
