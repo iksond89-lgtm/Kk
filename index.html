@@ -2,83 +2,240 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>英文單字複習系統</title>
-    </head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B1 第一冊 英文單字複習</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            min-height: 100vh; 
+            color: #333;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 20px auto; 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            overflow: hidden; 
+        }
+        header { 
+            background: #4a6ea9; 
+            color: white; 
+            padding: 25px; 
+            text-align: center; 
+        }
+        .menu { padding: 30px; text-align: center; }
+        button {
+            padding: 14px 28px; 
+            margin: 8px; 
+            font-size: 1.1em; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer;
+            background: #4a6ea9; 
+            color: white;
+        }
+        button:hover { background: #ff6b6b; }
+        .unit-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); 
+            gap: 15px; 
+            padding: 20px; 
+        }
+        .card {
+            background: #f9f9f9; 
+            border: 4px solid #4a6ea9; 
+            border-radius: 20px; 
+            min-height: 280px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 2.2em; 
+            margin: 30px; 
+            cursor: pointer;
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .options { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            padding: 20px; 
+        }
+        .back { 
+            position: absolute; 
+            top: 15px; 
+            left: 15px; 
+            font-size: 1.3em; 
+            background: #666; 
+        }
+        .small { font-size: 0.7em; color: #666; }
+    </style>
+</head>
 <body>
 <div class="container">
-    <header><h1>📚 英文單字複習</h1></header>
+    <header>
+        <h1>📚 B1 第一冊 英文單字複習</h1>
+    </header>
 
-    <div id="book-select-screen" class="menu">
-        <h2>請選擇冊數</h2>
-        <div id="book-grid" class="unit-grid">
-            <button onclick="selectBook(1)">第一冊</button>
-            <button onclick="selectBook(2)">第二冊</button>
-            <button onclick="selectBook(3)">第三冊</button>
-            <button onclick="selectBook(4)">第四冊</button>
-        </div>
-    </div>
-
-    <div id="unit-select-screen" class="menu" style="display:none;">
-        <button onclick="showScreen('book-select-screen')">← 返回冊數</button>
-        <h2 id="book-title"></h2>
+    <div id="unit-select-screen" class="menu">
+        <h2>請選擇單元（共 10 個 Unit）</h2>
         <div id="unit-grid" class="unit-grid"></div>
     </div>
 
     <div id="unit-menu-screen" class="menu" style="display:none;">
-        <button onclick="showScreen('unit-select-screen')">← 返回單元列表</button>
         <h2 id="current-unit-title"></h2>
-        <button onclick="startReview()">📇 複習模式</button>
-        <button onclick="startQuiz('eng-to-ch')">🧪 英翻中</button>
-        <button onclick="startQuiz('ch-to-eng')">🧪 中翻英</button>
+        <button onclick="startReview()">📇 複習模式（閃卡）</button><br>
+        <button onclick="startQuiz('eng-to-ch')">🧪 測驗 - 英翻中</button>
+        <button onclick="startQuiz('ch-to-eng')">🧪 測驗 - 中翻英</button><br><br>
+        <button onclick="backToUnits()">← 返回單元列表</button>
     </div>
 
-    <div id="study-screen" style="display:none; padding:20px;">
-        <button onclick="exitStudy()">← 結束並返回</button>
+    <div id="study-screen" style="display:none; padding:20px; position:relative;">
+        <button class="back" onclick="exitStudy()">← 結束學習</button>
         <div id="card" class="card" onclick="flipCard()"></div>
-        <div id="stats"></div>
-        <div id="quiz-area" style="display:none;"></div>
+        <div id="stats" style="text-align:center; font-size:1.4em; margin:15px 0;"></div>
+        <div id="quiz-area" style="display:none; padding:20px;"></div>
     </div>
 </div>
 
-<script type="module">
-import { vocabulary } from './vocab.js';
+<script>
+// 載入單字資料
+let b1Vocab = [];
 
-let currentBook, currentUnit, currentMode, quizType, currentIndex = 0;
-let currentWords = [];
+async function loadVocab() {
+    try {
+        const res = await fetch('b1-vocab.js');
+        const text = await res.text();
+        const jsonStr = text.replace(/^export const b1Vocab =/, '').replace(/;$/, '').trim();
+        b1Vocab = JSON.parse(jsonStr);
+        showUnitSelection();
+    } catch (e) {
+        alert('載入單字失敗，請確認 b1-vocab.js 與 index.html 在同一目錄');
+    }
+}
 
-// 畫面切換輔助
-window.showScreen = (id) => {
-    ['book-select-screen', 'unit-select-screen', 'unit-menu-screen', 'study-screen']
-        .forEach(s => document.getElementById(s).style.display = (s === id ? 'block' : 'none'));
-};
+let currentUnitWords = [];
+let currentIndex = 0;
+let isFlipped = false;
+let currentMode = 'review';
+let quizType = '';
 
-// 選擇冊數
-window.selectBook = (book) => {
-    currentBook = book;
-    document.getElementById('book-title').textContent = `第 ${book} 冊`;
-    const units = [...new Set(vocabulary.filter(w => w.book === book).map(w => w.unit))];
-    
+function showUnitSelection() {
+    const units = [1,2,3,4,5,6,7,8,9,10];
     let html = '';
     units.forEach(u => {
-        const count = vocabulary.filter(w => w.book === book && w.unit === u).length;
-        html += `<button onclick="selectUnit(${u})">Unit ${u}<br>(${count}字)</button>`;
+        const count = b1Vocab.filter(w => w.unit === u).length;
+        html += `<button onclick="selectUnit(${u})" style="padding:18px; font-size:1.2em;">
+                    Unit ${u}<br><span class="small">${count} 字</span>
+                 </button>`;
     });
     document.getElementById('unit-grid').innerHTML = html;
-    showScreen('unit-select-screen');
-};
+}
 
-// 選擇單元
-window.selectUnit = (unit) => {
-    currentUnit = unit;
-    currentWords = vocabulary.filter(w => w.book === currentBook && w.unit === unit);
-    document.getElementById('current-unit-title').textContent = `第 ${currentBook} 冊 - Unit ${unit}`;
-    showScreen('unit-menu-screen');
-};
+function selectUnit(unit) {
+    currentUnitWords = b1Vocab.filter(w => w.unit === unit);
+    currentIndex = 0;
+    document.getElementById('current-unit-title').innerHTML = `Unit ${unit} <small>（${currentUnitWords.length} 個單字）</small>`;
+    document.getElementById('unit-select-screen').style.display = 'none';
+    document.getElementById('unit-menu-screen').style.display = 'block';
+}
 
-// 閃卡與測驗邏輯維持你原本的實作方式即可
-// (記得將原 script 中的函式掛載到 window 下，確保按鈕點擊時找得到函式)
+function startReview() {
+    currentMode = 'review';
+    currentIndex = 0;
+    document.getElementById('unit-menu-screen').style.display = 'none';
+    document.getElementById('study-screen').style.display = 'block';
+    document.getElementById('quiz-area').style.display = 'none';
+    showCurrentCard();
+}
 
-window.exitStudy = () => showScreen('unit-menu-screen');
+function showCurrentCard() {
+    const word = currentUnitWords[currentIndex];
+    const card = document.getElementById('card');
+    card.innerHTML = `<strong>${word.eng}</strong><br><small>Unit ${word.unit}</small>`;
+    isFlipped = false;
+    updateStats();
+}
+
+function flipCard() {
+    if (currentMode !== 'review') return;
+    const word = currentUnitWords[currentIndex];
+    const card = document.getElementById('card');
+    if (!isFlipped) {
+        card.innerHTML = `<strong>${word.eng}</strong><br><br>${word.ch}`;
+        isFlipped = true;
+    } else {
+        showCurrentCard();
+    }
+}
+
+function startQuiz(type) {
+    currentMode = 'quiz';
+    quizType = type;
+    currentIndex = 0;
+    document.getElementById('unit-menu-screen').style.display = 'none';
+    document.getElementById('study-screen').style.display = 'block';
+    document.getElementById('quiz-area').style.display = 'block';
+    nextQuizQuestion();
+}
+
+function nextQuizQuestion() {
+    if (currentIndex >= currentUnitWords.length) {
+        alert('🎉 本單元測驗完成！');
+        exitStudy();
+        return;
+    }
+    const word = currentUnitWords[currentIndex];
+    const card = document.getElementById('card');
+    updateStats();
+
+    let question = quizType === 'eng-to-ch' ? word.eng : word.ch;
+    let correct = quizType === 'eng-to-ch' ? word.ch : word.eng;
+
+    card.innerHTML = `<strong>${question}</strong>`;
+
+    let options = [correct];
+    while (options.length < 4) {
+        const randWord = currentUnitWords[Math.floor(Math.random() * currentUnitWords.length)];
+        const opt = quizType === 'eng-to-ch' ? randWord.ch : randWord.eng;
+        if (!options.includes(opt)) options.push(opt);
+    }
+    options.sort(() => Math.random() - 0.5);
+
+    let html = '<div class="options">';
+    options.forEach(opt => {
+        html += `<button onclick="checkQuizAnswer('${opt.replace(/'/g,"\\'")}', '${correct.replace(/'/g,"\\'")}')">${opt}</button>`;
+    });
+    html += '</div>';
+    document.getElementById('quiz-area').innerHTML = html;
+}
+
+function checkQuizAnswer(selected, correct) {
+    if (selected === correct) alert('✅ 正確！');
+    else alert(`❌ 錯誤！正確答案：${correct}`);
+    currentIndex++;
+    setTimeout(nextQuizQuestion, 500);
+}
+
+function updateStats() {
+    document.getElementById('stats').textContent = `進度：${currentIndex + 1} / ${currentUnitWords.length}`;
+}
+
+function exitStudy() {
+    document.getElementById('study-screen').style.display = 'none';
+    document.getElementById('unit-menu-screen').style.display = 'block';
+}
+
+function backToUnits() {
+    document.getElementById('unit-menu-screen').style.display = 'none';
+    document.getElementById('unit-select-screen').style.display = 'block';
+}
+
+loadVocab();
 </script>
 </body>
 </html>
