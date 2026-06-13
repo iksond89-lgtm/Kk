@@ -1,229 +1,100 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字複習系統</title>
+let wrongList = [];
+let currentUnit = null;
+let currentIndex = 0;
+let mode = ""; // eng2ch or ch2eng
 
-    <script src="word-data.js"></script>
+const menu = document.getElementById("menu");
+const quiz = document.getElementById("quiz");
+const result = document.getElementById("result");
 
-    <style>
-        :root {
-            --primary: #4a90e2;
-            --success: #2ecc71;
-            --error: #e74c3c;
-            --background: #f5f7fa;
-            --card: #ffffff;
-            --text: #2c3e50;
-        }
+// 產生 unit 選單
+function showUnits() {
+    menu.innerHTML = "<h2>選擇 Unit</h2>";
 
-        body {
-            font-family: "Microsoft JhengHei", sans-serif;
-            background: var(--background);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .quiz-container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--card);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-        }
-
-        .screen { display: none; }
-        .screen.active { display: block; }
-
-        h2 { text-align: center; }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        button {
-            padding: 14px;
-            border-radius: 10px;
-            border: 2px solid #ddd;
-            background: #f8fafc;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        button:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .option.correct { background: #d1fae5; }
-        .option.wrong { background: #fee2e2; }
-    </style>
-</head>
-
-<body>
-
-<div class="quiz-container">
-
-    <!-- 選冊 -->
-    <div id="screen-book" class="screen active">
-        <h2>選擇冊別</h2>
-        <div class="grid">
-            <button onclick="selectBook('b1')">Book 1</button>
-            <button onclick="selectBook('b2')">Book 2</button>
-            <button onclick="selectBook('b3')">Book 3</button>
-            <button onclick="selectBook('core')">核心字彙</button>
-        </div>
-    </div>
-
-    <!-- 選單元 -->
-    <div id="screen-unit" class="screen">
-        <h2>選擇單元</h2>
-        <div class="grid" id="unitBox"></div>
-        <button onclick="backTo('screen-book')">返回</button>
-    </div>
-
-    <!-- 模式 -->
-    <div id="screen-mode" class="screen">
-        <h2>選擇模式</h2>
-        <button onclick="setMode('enToZh')">英文 → 中文</button>
-        <button onclick="setMode('zhToEn')">中文 → 英文</button>
-        <button onclick="backTo('screen-unit')">返回</button>
-    </div>
-
-    <!-- 測驗 -->
-    <div id="screen-quiz" class="screen">
-        <h2 id="q-title"></h2>
-        <div id="question"></div>
-        <div class="grid" id="options"></div>
-        <div id="feedback"></div>
-        <button onclick="nextQ()">下一題</button>
-    </div>
-
-</div>
-
-<script>
-let book = "";
-let unit = "";
-let mode = "";
-let list = [];
-let questions = [];
-let index = 0;
-let score = 0;
-
-function switchScreen(id){
-    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-}
-
-function selectBook(b){
-    book = b;
-    let box = document.getElementById("unitBox");
-    box.innerHTML = "";
-
-    for(let i=1;i<=10;i++){
-        let btn = document.createElement("button");
+    for (let i = 1; i <= 10; i++) {
+        const btn = document.createElement("button");
         btn.innerText = "Unit " + i;
-        btn.onclick = ()=>selectUnit(i);
-        box.appendChild(btn);
+        btn.onclick = () => chooseUnit(i);
+        menu.appendChild(btn);
     }
-
-    switchScreen("screen-unit");
 }
 
-function selectUnit(u){
-    unit = u;
+function chooseUnit(unit) {
+    currentUnit = WORD_DATA.b1[unit];
+    menu.innerHTML = `
+        <h2>Unit ${unit}</h2>
+        <button onclick="startQuiz('eng2ch')">英翻中</button>
+        <button onclick="startQuiz('ch2eng')">中翻英</button>
+    `;
+}
 
-    let vocab = WORD_DATA[book]?.[unit] || [];
+// 開始測驗
+function startQuiz(m) {
+    mode = m;
+    currentIndex = 0;
+    wrongList = [];
+    showQuestion();
+}
 
-    list = vocab;
+// 顯示題目
+function showQuestion() {
+    const word = currentUnit[currentIndex];
 
-    if(list.length === 0){
-        alert("沒有資料");
+    if (!word) {
+        finishQuiz();
         return;
     }
 
-    switchScreen("screen-mode");
+    let question = mode === "eng2ch" ? word.eng : word.ch;
+    let answerType = mode === "eng2ch" ? "中文" : "英文";
+
+    quiz.innerHTML = `
+        <h3>${question}</h3>
+        <input id="answer" placeholder="輸入${answerType}">
+        <button onclick="checkAnswer()">提交</button>
+    `;
 }
 
-function setMode(m){
-    mode = m;
-    startQuiz();
-}
+// 檢查答案
+function checkAnswer() {
+    const word = currentUnit[currentIndex];
+    const userAns = document.getElementById("answer").value.trim();
 
-function startQuiz(){
-    index = 0;
-    score = 0;
+    let correct = mode === "eng2ch" ? word.ch : word.eng;
 
-    questions = list.map(item=>{
-        let wrong = list.filter(x=>x.eng!==item.eng)
-                         .sort(()=>Math.random()-0.5)
-                         .slice(0,3);
-
-        let options = mode==="enToZh"
-            ? [item.ch, ...wrong.map(x=>x.ch)]
-            : [item.eng, ...wrong.map(x=>x.eng)];
-
-        options.sort(()=>Math.random()-0.5);
-
-        return {
-            q: mode==="enToZh"?item.eng:item.ch,
-            a: mode==="enToZh"?item.ch:item.eng,
-            options
-        };
-    });
-
-    switchScreen("screen-quiz");
-    show();
-}
-
-function show(){
-    let q = questions[index];
-
-    document.getElementById("q-title").innerText =
-        `第 ${index+1} 題 / ${questions.length}`;
-
-    document.getElementById("question").innerText = q.q;
-
-    let box = document.getElementById("options");
-    box.innerHTML = "";
-
-    q.options.forEach(opt=>{
-        let b = document.createElement("button");
-        b.className = "option";
-        b.innerText = opt;
-
-        b.onclick = ()=>{
-            if(opt===q.a){
-                b.classList.add("correct");
-                score++;
-            }else{
-                b.classList.add("wrong");
-            }
-        };
-
-        box.appendChild(b);
-    });
-}
-
-function nextQ(){
-    index++;
-    if(index>=questions.length){
-        alert("結束 分數:"+score);
-        switchScreen("screen-book");
-    }else{
-        show();
+    if (userAns !== correct) {
+        wrongList.push({
+            question: mode === "eng2ch" ? word.eng : word.ch,
+            correct: correct,
+            user: userAns
+        });
     }
+
+    currentIndex++;
+    showQuestion();
 }
 
-function backTo(id){
-    switchScreen(id);
-}
-</script>
+// 完成測驗
+function finishQuiz() {
+    quiz.innerHTML = "<h2>測驗完成</h2>";
 
-</body>
-</html>
+    if (wrongList.length === 0) {
+        result.innerHTML = "<p>全對！</p>";
+        return;
+    }
+
+    let html = "<h3>錯題本</h3><ul>";
+    wrongList.forEach(w => {
+        html += `<li>
+            題目：${w.question} <br>
+            你的答案：${w.user} <br>
+            正確：${w.correct}
+        </li><br>`;
+    });
+    html += "</ul>";
+
+    result.innerHTML = html;
+}
+
+// 初始化
+showUnits();
