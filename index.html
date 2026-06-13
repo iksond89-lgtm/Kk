@@ -7,35 +7,34 @@
 </head>
 <body>
 
-    <h1>簡宜學測複習</h1>
+<h1>簡宜學測複習</h1>
 
-    <!-- Unit 選擇 -->
-    <div id="unit-page">
-        <h2>選擇 Unit</h2>
-        <div id="unit-buttons"></div>
-    </div>
+<div id="unit-page">
+    <h2>選擇 Unit</h2>
+    <div id="unit-buttons"></div>
+</div>
 
-    <!-- 模式選擇 -->
-    <div id="mode-page" style="display:none;">
-        <h2 id="selected-unit-title"></h2>
-        <button onclick="startQuiz('enToCh')">英翻中</button>
-        <button onclick="startQuiz('chToEn')">中翻英</button>
-        <button onclick="backToUnits()">返回</button>
-    </div>
+<div id="mode-page" style="display:none;">
+    <h2 id="selected-unit-title"></h2>
+    <button onclick="startQuiz('enToCh')">英翻中</button>
+    <button onclick="startQuiz('chToEn')">中翻英</button>
+    <button onclick="backToUnits()">返回</button>
+</div>
 
-    <!-- 測驗 -->
-    <div id="quiz-page" style="display:none;">
-        <h2 id="question"></h2>
-        <input type="text" id="answerInput">
-        <button onclick="submitAnswer()">提交</button>
-        <button onclick="addWrong()">加入錯題</button>
-        <p id="result"></p>
-        <button onclick="nextQuestion()">下一題</button>
-    </div>
+<div id="quiz-page" style="display:none;">
+    <h2 id="question"></h2>
+    <input id="answerInput" type="text">
+    <button onclick="submitAnswer()">提交</button>
+    <button onclick="addWrong()">加入錯題</button>
+    <p id="result"></p>
+    <button onclick="nextQuestion()">下一題</button>
+</div>
 
-    <script src="b1-vocab.js"></script>
-    <script src="wrongbook.js"></script>
-    <script src="app.js"></script>
+<script src="b1-vocab.js"></script>
+<script src="wrongbook.js"></script>
+
+<!-- ⭐ GitHub Pages 必須用 defer -->
+<script src="app.js" defer></script>
 
 </body>
 </html>
