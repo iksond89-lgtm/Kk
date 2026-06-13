@@ -87,8 +87,8 @@
             background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px;
             padding: 14px 20px; font-size: 16px; text-align: left; cursor: pointer; color: var(--text);
         }
-        .option-btn.correct { background-color: #def7ec; border-color: #2ecc71; color: #03543f; font-weight: bold; }
-        .option-btn.wrong { background-color: #fde8e8; border-color: #e74c3c; color: #9b1c1c; }
+        .option-btn.correct { background-color: #def7ec; border-color: var(--success); color: #03543f; font-weight: bold; }
+        .option-btn.wrong { background-color: #fde8e8; border-color: var(--error); color: #9b1c1c; }
 
         .feedback { min-height: 40px; text-align: center; font-size: 16px; font-weight: 500; margin-bottom: 20px; }
         .next-btn { width: 100%; background-color: var(--primary); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; }
@@ -108,6 +108,7 @@
 <body>
 
     <div class="quiz-container">
+        
         <div id="book-screen" class="screen active">
             <h2>📚 選擇英文選冊</h2>
             <div class="subtitle">請選擇你要複習的課本冊別</div>
@@ -142,7 +143,7 @@
             <div class="subtitle" id="mode-screen-subtitle">請選擇出題版本</div>
             <div class="grid-menu" style="grid-template-columns: 1fr;">
                 <button class="menu-btn" onclick="setMode('engToCh')">🔤 英翻中 (看英文選中文)</button>
-                <button class="menu-btn" onclick="setMode('chToEng')">🇹🇼 中翻英 (看中文選英文 + 詞性提示)</button>
+                <button class="menu-btn" onclick="setMode('chToEng')">🇹🇼 中翻英 (看中文選英文)</button>
                 <button class="menu-btn btn-back" onclick="switchScreen('unit-screen')">⬅ 回到選單元</button>
             </div>
         </div>
@@ -166,15 +167,18 @@
             <p id="stats-text">答對題數：0 / 0</p>
             <div class="score-big" id="final-score">0</div>
             <p id="evaluation-text"></p>
+            
             <div id="wrong-answers-section" style="display:none;">
                 <div class="wrong-title">❌ 本次錯題紀錄庫：</div>
                 <div class="wrong-list" id="wrong-list-container"></div>
             </div>
+
             <div class="btn-group">
                 <button class="btn-retry" onclick="retryQuiz()">再測一次</button>
                 <button class="btn-home" onclick="switchScreen('book-screen')">回首頁 🏠</button>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -188,14 +192,6 @@
         let hasAnswered = false;
         let wrongRecords = []; 
 
-        function getPosTag(chText) {
-            if (chText.includes("的")) return "[adj. 形容詞]";
-            if (chText.includes("地")) return "[adv. 副詞]";
-            if (chText.includes("使") || chText.includes("讓") || chText.includes("辦")) return "[v. 動詞]";
-            if (chText.includes("；") || chText.length > 3) return "[n./v. 綜合]";
-            return "[n. 名詞]";
-        }
-
         function switchScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -208,17 +204,19 @@
             switchScreen("unit-screen");
         }
 
-        // 修改後的核心邏輯：直接讀取 b1-vocab.js
         function selectUnit(unitNum) {
             selectedUnitNum = unitNum;
-            const data = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId] && WORD_DATA[selectedBookId][unitNum]) ? WORD_DATA[selectedBookId][unitNum] : null;
+            const unitData = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId] && WORD_DATA[selectedBookId][unitNum]) 
+                             ? WORD_DATA[selectedBookId][unitNum] 
+                             : null;
 
-            if (!data || data.length < 4) {
-                alert("該單元單字資料不存在或不足 4 個！");
+            if (!unitData || !unitData.words || !unitData.phrases) {
+                alert("該單元的資料尚未定義！(請確保包含 words 與 phrases)");
                 return;
             }
-            wordList = data;
-            document.getElementById("mode-screen-subtitle").innerText = `已選：第 ${selectedBookId.replace("b","")} 冊 Unit ${unitNum}`;
+
+            wordList = [...unitData.words, ...unitData.phrases];
+            document.getElementById("mode-screen-subtitle").innerText = `已選：第 ${selectedBookId.replace("b","")} 冊 Unit ${unitNum} (共 ${wordList.length} 題)`;
             switchScreen("mode-screen");
         }
 
@@ -230,35 +228,21 @@
 
         function startQuiz() {
             wrongRecords = []; 
-            let shuffledLesson = [...wordList].sort(() => 0.5 - Math.random());
+            quizQuestions = [...wordList].sort(() => 0.5 - Math.random()).map(item => {
+                let pool = wordList.filter(w => w.eng !== item.eng);
+                let options = [item.ch, pool[0].ch, pool[1].ch, pool[2].ch];
+                let correctAnswer = item.ch;
 
-            quizQuestions = shuffledLesson.map(item => {
-                let wrongPool = wordList.filter(w => w.eng !== item.eng);
-                let shuffledWrong = wrongPool.sort(() => 0.5 - Math.random());
-                
-                let options = [];
-                let questionText = "";
-                let correctAnswer = "";
-
-                if (quizMode === "engToCh") {
-                    questionText = item.eng;
-                    correctAnswer = item.ch;
-                    options = [item.ch, shuffledWrong[0].ch, shuffledWrong[1].ch, shuffledWrong[2].ch];
-                } else {
-                    let pos = getPosTag(item.ch);
-                    questionText = `${pos} ${item.ch}`;
+                if (quizMode === "chToEng") {
+                    options = [item.eng, pool[0].eng, pool[1].eng, pool[2].eng];
                     correctAnswer = item.eng;
-                    options = [item.eng, shuffledWrong[0].eng, shuffledWrong[1].eng, shuffledWrong[2].eng];
                 }
-
-                options.sort(() => 0.5 - Math.random());
 
                 return {
                     rawWord: item.eng,
                     rawCh: item.ch,
-                    question: questionText,
-                    type: quizMode === "engToCh" ? "請選擇正確的中文意思" : "請選擇正確的英文單字",
-                    options: options,
+                    question: quizMode === "engToCh" ? item.eng : item.ch,
+                    options: options.sort(() => 0.5 - Math.random()),
                     answer: correctAnswer
                 };
             });
@@ -273,12 +257,15 @@
             hasAnswered = false;
             document.getElementById("next-btn").style.display = "none";
             document.getElementById("feedback-text").innerText = "";
+            
             const q = quizQuestions[currentIndex];
             document.getElementById("progress-text").innerText = `${currentIndex + 1} / ${quizQuestions.length}`;
-            document.getElementById("quiz-type").innerText = q.type;
+            document.getElementById("quiz-type").innerText = quizMode === "engToCh" ? "請選擇正確的中文意思" : "請選擇正確的英文單字";
             document.getElementById("target-question").innerText = q.question;
+
             const optionsContainer = document.getElementById("options-container");
             optionsContainer.innerHTML = "";
+
             q.options.forEach(opt => {
                 const btn = document.createElement("button");
                 btn.className = "option-btn";
@@ -291,8 +278,10 @@
         function checkAnswer(selectedOpt, clickedBtn) {
             if (hasAnswered) return;
             hasAnswered = true;
+
             const q = quizQuestions[currentIndex];
             const buttons = document.getElementsByClassName("option-btn");
+
             if (selectedOpt === q.answer) {
                 clickedBtn.classList.add("correct");
                 document.getElementById("feedback-text").innerHTML = `<span style="color:var(--success)">💯 答對了</span>`;
@@ -303,15 +292,23 @@
                     if (btn.innerText === q.answer) btn.classList.add("correct");
                 }
                 document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">❌ 答案是：${q.answer}</span>`;
-                wrongRecords.push({ eng: q.rawWord, ch: q.rawCh, yourAnswer: selectedOpt });
+                
+                wrongRecords.push({
+                    eng: q.rawWord,
+                    ch: q.rawCh,
+                    yourAnswer: selectedOpt
+                });
             }
             document.getElementById("next-btn").style.display = "block";
         }
 
         function nextQuestion() {
             currentIndex++;
-            if (currentIndex < quizQuestions.length) showQuestion();
-            else showResult();
+            if (currentIndex < quizQuestions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
         }
 
         function showResult() {
@@ -319,17 +316,32 @@
             let finalScore = Math.round((correctAnswersCount / quizQuestions.length) * 100);
             document.getElementById("stats-text").innerText = `答對題數：${correctAnswersCount} / ${quizQuestions.length}`;
             document.getElementById("final-score").innerText = finalScore;
-            let evalText = finalScore === 100 ? "太完美了！完全征服！🏆" : (finalScore >= 80 ? "非常厲害！快要全熟了！🔥" : (finalScore >= 60 ? "及格囉！繼續加油！👍" : "再接再厲！"));
+
+            let evalText = "再接再厲！";
+            if (finalScore === 100) evalText = "太完美了！完全征服！🏆";
+            else if (finalScore >= 80) evalText = "非常厲害！快要全熟了！🔥";
+            else if (finalScore >= 60) evalText = "及格囉！繼續加油！👍";
             document.getElementById("evaluation-text").innerText = evalText;
+
             const wrongSection = document.getElementById("wrong-answers-section");
             const wrongContainer = document.getElementById("wrong-list-container");
+            
             if (wrongRecords.length > 0) {
                 wrongSection.style.display = "block";
-                wrongContainer.innerHTML = wrongRecords.map((item, i) => `<div class="wrong-item"><strong>${i + 1}. ${item.eng}</strong> (${item.ch})<br><span style="color:var(--error)">你的答案: ${item.yourAnswer}</span></div>`).join("");
-            } else wrongSection.style.display = "none";
+                wrongContainer.innerHTML = wrongRecords.map((item, index) => `
+                    <div class="wrong-item">
+                        <strong>${index + 1}. ${item.eng}</strong> (${item.ch})<br>
+                        <span style="color:var(--error)">你的答案: ${item.yourAnswer}</span>
+                    </div>
+                `).join('');
+            } else {
+                wrongSection.style.display = "none";
+            }
         }
 
-        function retryQuiz() { startQuiz(); }
+        function retryQuiz() {
+            startQuiz();
+        }
     </script>
 </body>
 </html>
