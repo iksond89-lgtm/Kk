@@ -75,6 +75,35 @@
             color: white;
             border: none;
         }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; }
+        .title { font-size: 16px; font-weight: bold; color: var(--primary); }
+        .progress { font-size: 14px; color: #7f8c8d; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
+        .word-box { text-align: center; margin: 30px 0; }
+        .quiz-type-tag { display: inline-block; font-size: 12px; background-color: #ebf8ff; color: #2b6cb0; padding: 4px 12px; border-radius: 12px; margin-bottom: 12px; font-weight: bold; }
+        .word { font-size: 32px; font-weight: 700; color: #1a202c; word-break: break-word; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
+        
+        .option-btn {
+            background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px;
+            padding: 14px 20px; font-size: 16px; text-align: left; cursor: pointer; color: var(--text);
+        }
+        .option-btn.correct { background-color: #def7ec; border-color: #2ecc71; color: #03543f; font-weight: bold; }
+        .option-btn.wrong { background-color: #fde8e8; border-color: #e74c3c; color: #9b1c1c; }
+
+        .feedback { min-height: 40px; text-align: center; font-size: 16px; font-weight: 500; margin-bottom: 20px; }
+        .next-btn { width: 100%; background-color: var(--primary); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; }
+        
+        .score-big { font-size: 64px; font-weight: 800; color: var(--primary); margin: 20px 0; text-align: center; }
+        .btn-group { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+        .btn-group button { flex: 1; min-width: 120px; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-retry { background-color: #edf2f7; color: var(--text); }
+        .btn-home { background-color: var(--text); color: white; }
+
+        .wrong-list { text-align: left; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 10px; padding: 15px; margin-top: 20px; max-height: 250px; overflow-y: auto; }
+        .wrong-item { border-bottom: 1px solid #feb2b2; padding: 8px 0; font-size: 15px; }
+        .wrong-item:last-child { border-bottom: none; }
+        .wrong-title { color: #c53030; font-weight: bold; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -86,21 +115,11 @@
             <div class="grid-menu">
                 <button class="menu-btn" onclick="selectBook('b1')">簡宜學測複習</button>
                 <button class="menu-btn" onclick="selectBook('core')">核心字彙</button>
+                <button class="menu-btn" onclick="selectBook('b3')">第三冊 (Book 3)</button>
+                <button class="menu-btn" onclick="selectBook('b4')">第四冊 (Book 4)</button>
             </div>
         </div>
 
-        <!-- 核心字彙難度選擇 -->
-        <div id="core-level-screen" class="screen">
-            <h2>🔰 核心字彙</h2>
-            <div class="subtitle">請選擇難度</div>
-            <div class="grid-menu">
-                <button class="menu-btn" onclick="selectCoreLevel('basic')">Basic</button>
-                <button class="menu-btn" onclick="selectCoreLevel('advance')">Advance</button>
-                <button class="menu-btn btn-back" onclick="switchScreen('book-screen')">⬅ 回到選冊</button>
-            </div>
-        </div>
-
-        <!-- 單元選擇 -->
         <div id="unit-screen" class="screen">
             <h2>🔍 選擇單元</h2>
             <div class="subtitle" id="unit-screen-subtitle">請選擇單元</div>
@@ -113,11 +132,10 @@
             <div class="grid-menu" style="grid-template-columns: 1fr;">
                 <button class="menu-btn" onclick="setMode('engToCh')">英翻中</button>
                 <button class="menu-btn" onclick="setMode('chToEng')">中翻英</button>
-                <button class="menu-btn btn-back" onclick="backToUnit()">⬅ 回到選單元</button>
+                <button class="menu-btn btn-back" onclick="switchScreen('unit-screen')">⬅ 回到選單元</button>
             </div>
         </div>
 
-        <!-- 測驗畫面 -->
         <div id="quiz-screen" class="screen">
             <div class="header">
                 <div class="title" id="quiz-title">單字大挑戰</div>
@@ -150,7 +168,6 @@
 
     <script>
         let selectedBookId = "";
-        let selectedCoreLevel = "";
         let selectedUnitNum = 0;
         let quizMode = "engToCh"; 
         let wordList = [];
@@ -160,100 +177,6 @@
         let hasAnswered = false;
         let wrongRecords = []; 
 
-        function switchScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        function selectBook(bookId) {
-            selectedBookId = bookId;
-            selectedCoreLevel = "";
-
-            if (bookId === 'core') {
-                switchScreen('core-level-screen');
-            } else {
-                showUnitSelection(bookId);
-            }
-        }
-
-        function selectCoreLevel(level) {
-            selectedCoreLevel = level;
-            showUnitSelection('core');
-        }
-
-        function showUnitSelection(bookId) {
-            const unitGrid = document.getElementById("unit-grid");
-            unitGrid.innerHTML = "";
-
-            let maxUnit = (bookId === 'b1') ? 10 : 18;
-            let subtitle = bookId === 'core' 
-                ? `核心字彙 - ${selectedCoreLevel.toUpperCase()}：請選擇單元` 
-                : `簡宜學測複習：請選擇單元 (1-${maxUnit})`;
-
-            document.getElementById("unit-screen-subtitle").innerText = subtitle;
-
-            for (let i = 1; i <= maxUnit; i++) {
-                const btn = document.createElement("button");
-                btn.className = "menu-btn";
-                btn.innerText = `Unit ${i}`;
-                btn.onclick = () => selectUnit(i);
-                unitGrid.appendChild(btn);
-            }
-
-            const backBtn = document.createElement("button");
-            backBtn.className = "menu-btn btn-back";
-            if (bookId === 'core') {
-                backBtn.innerText = "⬅ 回到選擇難度";
-                backBtn.onclick = () => switchScreen('core-level-screen');
-            } else {
-                backBtn.innerText = "⬅ 回到選冊";
-                backBtn.onclick = () => switchScreen('book-screen');
-            }
-            unitGrid.appendChild(backBtn);
-
-            switchScreen("unit-screen");
-        }
-
-        function selectUnit(unitNum) {
-            selectedUnitNum = unitNum;
-
-            let wData = [];
-            let iData = [];
-
-            if (selectedBookId === 'core' && selectedCoreLevel) {
-                wData = WORD_DATA?.core?.[selectedCoreLevel]?.[unitNum] || [];
-                iData = IDIOM_DATA?.core?.[selectedCoreLevel]?.[unitNum] || [];
-            } else {
-                wData = WORD_DATA?.[selectedBookId]?.[unitNum] || [];
-                iData = IDIOM_DATA?.[selectedBookId]?.[unitNum] || [];
-            }
-
-            wordList = [...wData, ...iData];
-
-            if (wordList.length === 0) {
-                alert(`Unit ${unitNum} 目前沒有資料，請確認 JS 檔案內容。`);
-                return;
-            }
-
-            const levelText = selectedCoreLevel ? ` - ${selectedCoreLevel.toUpperCase()}` : "";
-            document.getElementById("mode-screen-subtitle").innerText = 
-                `已選：${selectedBookId}${levelText} Unit ${unitNum}（共 ${wordList.length} 題）`;
-
-            switchScreen("mode-screen");
-        }
-
-        function backToUnit() {
-            showUnitSelection(selectedBookId);
-        }
-
-        function setMode(mode) {
-            quizMode = mode;
-            const levelText = selectedCoreLevel ? ` - ${selectedCoreLevel.toUpperCase()}` : "";
-            document.getElementById("quiz-title").innerText = `${selectedBookId}${levelText} Unit ${selectedUnitNum}`;
-            startQuiz();
-        }
-
-        // ==================== 測驗邏輯（不變） ====================
         function getPosTag(chText) {
             if (chText.includes("的")) return "[adj. 形容詞]";
             if (chText.includes("地")) return "[adv. 副詞]";
@@ -262,32 +185,101 @@
             return "[n. 名詞]";
         }
 
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function selectBook(bookId) {
+            selectedBookId = bookId;
+            const unitGrid = document.getElementById("unit-grid");
+            unitGrid.innerHTML = "";
+
+            if (bookId === 'core') {
+                document.getElementById("unit-screen-subtitle").innerText = "核心字彙：請選擇難度";
+                addUnitBtn("Basic", "basic");
+                addUnitBtn("Advance", "advance");
+            } else {
+                document.getElementById("unit-screen-subtitle").innerText = "請選擇單元";
+                for(let i=1; i<=10; i++) addUnitBtn(`Unit ${i}`, i);
+            }
+            
+            const backBtn = document.createElement("button");
+            backBtn.className = "menu-btn btn-back";
+            backBtn.innerText = "⬅ 回到選冊";
+            backBtn.onclick = () => switchScreen('book-screen');
+            unitGrid.appendChild(backBtn);
+
+            switchScreen("unit-screen");
+        }
+
+        function addUnitBtn(label, val) {
+            const btn = document.createElement("button");
+            btn.className = "menu-btn";
+            btn.innerText = label;
+            btn.onclick = () => selectUnit(val);
+            document.getElementById("unit-grid").appendChild(btn);
+        }
+
+        function selectUnit(unitNum) {
+            selectedUnitNum = unitNum;
+            
+            // 修正：確保正確抓取 WORD_DATA 與 IDIOM_DATA
+            // 若為 b1-b4，確保變數正確抓取；若為 core 也能對應
+            const wData = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId]) ? WORD_DATA[selectedBookId][unitNum] : [];
+            const iData = (typeof IDIOM_DATA !== 'undefined' && IDIOM_DATA[selectedBookId]) ? IDIOM_DATA[selectedBookId][unitNum] : [];
+
+            // 強制合併，即便某一邊為 undefined 也不會中斷
+            wordList = [...(wData || []), ...(iData || [])];
+            
+            if (wordList.length === 0) {
+                alert("該單元資料庫為空，請檢查 b1-vocab.js 與 b1-idiom.js 的資料是否已載入！");
+                return;
+            }
+            
+            document.getElementById("mode-screen-subtitle").innerText = `已選：${selectedBookId} ${selectedUnitNum}（共 ${wordList.length} 題）`;
+            switchScreen("mode-screen");
+        }
+
+        function setMode(mode) {
+            quizMode = mode;
+            document.getElementById("quiz-title").innerText = `${selectedBookId} - ${selectedUnitNum}`;
+            startQuiz();
+        }
+
         function startQuiz() {
             wrongRecords = []; 
             let shuffledLesson = [...wordList].sort(() => 0.5 - Math.random());
 
             quizQuestions = shuffledLesson.map(item => {
                 let wrongPool = wordList.filter(w => w.eng !== item.eng);
-                let shuffledWrong = wrongPool.sort(() => 0.5 - Math.random()).slice(0, 3);
+                let shuffledWrong = wrongPool.sort(() => 0.5 - Math.random());
                 
+                let options = [];
+                let questionText = "";
+                let correctAnswer = "";
+
                 if (quizMode === "engToCh") {
-                    const options = [item.ch, ...shuffledWrong.map(w => w.ch)].sort(() => 0.5 - Math.random());
-                    return {
-                        rawWord: item.eng, rawCh: item.ch,
-                        question: item.eng,
-                        type: "請選擇正確的中文意思",
-                        options, answer: item.ch
-                    };
+                    questionText = item.eng;
+                    correctAnswer = item.ch;
+                    options = [item.ch, shuffledWrong[0].ch, shuffledWrong[1].ch, shuffledWrong[2].ch];
                 } else {
-                    const pos = getPosTag(item.ch);
-                    const options = [item.eng, ...shuffledWrong.map(w => w.eng)].sort(() => 0.5 - Math.random());
-                    return {
-                        rawWord: item.eng, rawCh: item.ch,
-                        question: `${pos} ${item.ch}`,
-                        type: "請選擇正確的英文單字",
-                        options, answer: item.eng
-                    };
+                    let pos = getPosTag(item.ch);
+                    questionText = `${pos} ${item.ch}`;
+                    correctAnswer = item.eng;
+                    options = [item.eng, shuffledWrong[0].eng, shuffledWrong[1].eng, shuffledWrong[2].eng];
                 }
+
+                options.sort(() => 0.5 - Math.random());
+
+                return {
+                    rawWord: item.eng,
+                    rawCh: item.ch,
+                    question: questionText,
+                    type: quizMode === "engToCh" ? "請選擇正確的中文意思" : "請選擇正確的英文單字",
+                    options: options,
+                    answer: correctAnswer
+                };
             });
 
             currentIndex = 0;
@@ -304,15 +296,14 @@
             document.getElementById("progress-text").innerText = `${currentIndex + 1} / ${quizQuestions.length}`;
             document.getElementById("quiz-type").innerText = q.type;
             document.getElementById("target-question").innerText = q.question;
-
-            const container = document.getElementById("options-container");
-            container.innerHTML = "";
+            const optionsContainer = document.getElementById("options-container");
+            optionsContainer.innerHTML = "";
             q.options.forEach(opt => {
                 const btn = document.createElement("button");
                 btn.className = "option-btn";
                 btn.innerText = opt;
                 btn.onclick = () => checkAnswer(opt, btn);
-                container.appendChild(btn);
+                optionsContainer.appendChild(btn);
             });
         }
 
@@ -321,17 +312,16 @@
             hasAnswered = true;
             const q = quizQuestions[currentIndex];
             const buttons = document.getElementsByClassName("option-btn");
-
             if (selectedOpt === q.answer) {
                 clickedBtn.classList.add("correct");
-                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--success)">✔ 答對了！</span>`;
+                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--success)">哇操答對了</span>`;
                 correctAnswersCount++;
             } else {
                 clickedBtn.classList.add("wrong");
                 for (let btn of buttons) {
                     if (btn.innerText === q.answer) btn.classList.add("correct");
                 }
-                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">❌ 答案是：${q.answer}</span>`;
+                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">打錯了傻逼❌ 答案是：${q.answer}</span>`;
                 wrongRecords.push({ eng: q.rawWord, ch: q.rawCh, yourAnswer: selectedOpt });
             }
             document.getElementById("next-btn").style.display = "block";
@@ -348,21 +338,14 @@
             let finalScore = Math.round((correctAnswersCount / quizQuestions.length) * 100);
             document.getElementById("stats-text").innerText = `答對題數：${correctAnswersCount} / ${quizQuestions.length}`;
             document.getElementById("final-score").innerText = finalScore;
-            
-            let evalText = finalScore === 100 ? "太強了！保持下去！" : 
-                          (finalScore >= 80 ? "很棒！繼續加油" : 
-                          (finalScore >= 60 ? "還可以再加強喔" : "下次努力！"));
+            let evalText = finalScore === 100 ? "不要太驕傲，人外有人天外有天" : (finalScore >= 80 ? "沒有很高 隔壁的阿明都考100分" : (finalScore >= 60 ? "快不及格了 沒什麼好高興的" : "你什麼意思"));
             document.getElementById("evaluation-text").innerText = evalText;
-
             const wrongSection = document.getElementById("wrong-answers-section");
+            const wrongContainer = document.getElementById("wrong-list-container");
             if (wrongRecords.length > 0) {
                 wrongSection.style.display = "block";
-                document.getElementById("wrong-list-container").innerHTML = wrongRecords.map((item, i) => 
-                    `<div class="wrong-item"><strong>${i+1}. ${item.eng}</strong> (${item.ch})<br><span style="color:var(--error)">你的答案: ${item.yourAnswer}</span></div>`
-                ).join("");
-            } else {
-                wrongSection.style.display = "none";
-            }
+                wrongContainer.innerHTML = wrongRecords.map((item, i) => `<div class="wrong-item"><strong>${i + 1}. ${item.eng}</strong> (${item.ch})<br><span style="color:var(--error)">你的答案: ${item.yourAnswer}</span></div>`).join("");
+            } else wrongSection.style.display = "none";
         }
 
         function retryQuiz() { startQuiz(); }
