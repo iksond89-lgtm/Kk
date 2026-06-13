@@ -53,6 +53,7 @@ const WORD_DATA = {
             { "eng": "wipe", "ch": "擦拭；消除" }
         ],
         "2": [
+            [
     { "eng": "adventure", "ch": "冒險；冒險經歷" },
     { "eng": "appliance", "ch": "器具；(家用)電器" },
     { "eng": "assist", "ch": "幫助 = help" },
@@ -103,6 +104,7 @@ const WORD_DATA = {
     { "eng": "virus", "ch": "病毒" },
     { "eng": "weaken", "ch": "使衰弱 ⇔ strengthen；使強度減弱" },
     { "eng": "wisdom", "ch": "智慧" }
+]
         ],
         "3": [
             { "eng": "achieve", "ch": "達到；完成" },
