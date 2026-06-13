@@ -111,8 +111,8 @@
 
     <div class="quiz-container">
         <div id="book-screen" class="screen active">
-            <h2>📚 選擇英文選冊</h2>
-            <div class="subtitle">請選擇你要複習的課本冊別</div>
+            <h2>請選擇要複習的</h2>
+            <div class="subtitle">💦💦💦💦💦💦💦💦💦</div>
             <div class="grid-menu">
                 <button class="menu-btn" onclick="selectBook('b1')">簡宜學測複習</button>
                 <button class="menu-btn" onclick="selectBook('b2')">第二冊 (Book 2)</button>
@@ -301,14 +301,14 @@
             const buttons = document.getElementsByClassName("option-btn");
             if (selectedOpt === q.answer) {
                 clickedBtn.classList.add("correct");
-                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--success)">💯 答對了</span>`;
+                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--success)">哇操答對了</span>`;
                 correctAnswersCount++;
             } else {
                 clickedBtn.classList.add("wrong");
                 for (let btn of buttons) {
                     if (btn.innerText === q.answer) btn.classList.add("correct");
                 }
-                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">❌ 答案是：${q.answer}</span>`;
+                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">打錯了傻逼❌ 答案是：${q.answer}</span>`;
                 wrongRecords.push({ eng: q.rawWord, ch: q.rawCh, yourAnswer: selectedOpt });
             }
             document.getElementById("next-btn").style.display = "block";
