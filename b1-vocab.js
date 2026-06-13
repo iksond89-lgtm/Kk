@@ -104,7 +104,7 @@ const WORD_DATA = {
     { "eng": "virus", "ch": "病毒" },
     { "eng": "weaken", "ch": "使衰弱 ⇔ strengthen；使強度減弱" },
     { "eng": "wisdom", "ch": "智慧" }
-]
+
         ],
         "3": [
             { "eng": "achieve", "ch": "達到；完成" },
