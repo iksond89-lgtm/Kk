@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -115,7 +114,7 @@
             <div class="subtitle">💦💦💦💦💦💦💦💦💦</div>
             <div class="grid-menu">
                 <button class="menu-btn" onclick="selectBook('b1')">簡宜學測複習</button>
-                <button class="menu-btn" onclick="selectBook('b2')">第二冊 (Book 2)</button>
+                <button class="menu-btn" onclick="selectBook('core')">核心字彙</button>
                 <button class="menu-btn" onclick="selectBook('b3')">第三冊 (Book 3)</button>
                 <button class="menu-btn" onclick="selectBook('b4')">第四冊 (Book 4)</button>
             </div>
@@ -124,19 +123,7 @@
         <div id="unit-screen" class="screen">
             <h2>🔍 選擇單元</h2>
             <div class="subtitle" id="unit-screen-subtitle">請選擇單元</div>
-            <div class="grid-menu">
-                <button class="menu-btn" onclick="selectUnit(1)">Unit 01</button>
-                <button class="menu-btn" onclick="selectUnit(2)">Unit 02</button>
-                <button class="menu-btn" onclick="selectUnit(3)">Unit 03</button>
-                <button class="menu-btn" onclick="selectUnit(4)">Unit 04</button>
-                <button class="menu-btn" onclick="selectUnit(5)">Unit 05</button>
-                <button class="menu-btn" onclick="selectUnit(6)">Unit 06</button>
-                <button class="menu-btn" onclick="selectUnit(7)">Unit 07</button>
-                <button class="menu-btn" onclick="selectUnit(8)">Unit 08</button>
-                <button class="menu-btn" onclick="selectUnit(9)">Unit 09</button>
-                <button class="menu-btn" onclick="selectUnit(10)">Unit 10</button>
-                <button class="menu-btn btn-back" onclick="switchScreen('book-screen')">⬅ 回到選冊</button>
-            </div>
+            <div class="grid-menu" id="unit-grid"></div>
         </div>
 
         <div id="mode-screen" class="screen">
@@ -205,32 +192,53 @@
 
         function selectBook(bookId) {
             selectedBookId = bookId;
-            const bookNum = bookId.replace("b", "");
-            document.getElementById("unit-screen-subtitle").innerText = `目前已選：第 ${bookNum} 冊，請選單元`;
+            const unitGrid = document.getElementById("unit-grid");
+            unitGrid.innerHTML = "";
+
+            if (bookId === 'core') {
+                document.getElementById("unit-screen-subtitle").innerText = "核心字彙：請選擇難度";
+                addUnitBtn("Basic", "basic");
+                addUnitBtn("Advance", "advance");
+            } else {
+                document.getElementById("unit-screen-subtitle").innerText = "請選擇單元";
+                for(let i=1; i<=10; i++) addUnitBtn(`Unit ${i}`, i);
+            }
+            
+            const backBtn = document.createElement("button");
+            backBtn.className = "menu-btn btn-back";
+            backBtn.innerText = "⬅ 回到選冊";
+            backBtn.onclick = () => switchScreen('book-screen');
+            unitGrid.appendChild(backBtn);
+
             switchScreen("unit-screen");
         }
 
-        // 核心邏輯：合併單字 (50題) + 片語 (10題) = 60題
+        function addUnitBtn(label, val) {
+            const btn = document.createElement("button");
+            btn.className = "menu-btn";
+            btn.innerText = label;
+            btn.onclick = () => selectUnit(val);
+            document.getElementById("unit-grid").appendChild(btn);
+        }
+
         function selectUnit(unitNum) {
             selectedUnitNum = unitNum;
-
             const wordData = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId] && WORD_DATA[selectedBookId][unitNum]) ? WORD_DATA[selectedBookId][unitNum] : [];
             const idiomData = (typeof IDIOM_DATA !== 'undefined' && IDIOM_DATA[selectedBookId] && IDIOM_DATA[selectedBookId][unitNum]) ? IDIOM_DATA[selectedBookId][unitNum] : [];
 
             const combined = [...wordData, ...idiomData];
-
             if (combined.length < 4) {
-                alert("該單元單字／片語資料不存在或不足 4 個！");
+                alert("該單元資料不足，無法出題！");
                 return;
             }
             wordList = combined;
-            document.getElementById("mode-screen-subtitle").innerText = `已選：第 ${selectedBookId.replace("b","")} 冊 Unit ${unitNum}（單字50 + 片語10 = 共60題）`;
+            document.getElementById("mode-screen-subtitle").innerText = `已選：${selectedBookId} ${selectedUnitNum}（共 ${combined.length} 題）`;
             switchScreen("mode-screen");
         }
 
         function setMode(mode) {
             quizMode = mode;
-            document.getElementById("quiz-title").innerText = `第 ${selectedBookId.replace("b","")} 冊 Unit ${selectedUnitNum}`;
+            document.getElementById("quiz-title").innerText = `${selectedBookId} - ${selectedUnitNum}`;
             startQuiz();
         }
 
