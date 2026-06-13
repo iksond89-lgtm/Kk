@@ -524,3 +524,44 @@ const WORD_DATA = {
         ]
     }
 };
+// ... 省略
+"1": [ ... ],
+"2": [ // 這裡請刪除原來多出來的 [
+    { "eng": "adventure", "ch": "冒險；冒險經歷" },
+    // ... 中間內容保持不變 ...
+    { "eng": "wisdom", "ch": "智慧" }
+], // 這裡刪除原本多出的 ]
+"3": [ ... ],
+// ... 省略function selectUnit(unitNum) {
+    selectedUnitNum = unitNum;
+    const unitKey = String(unitNum); 
+
+    let wData = [];
+    let iData = [];
+
+    if (selectedBookId === 'core' && selectedCoreLevel) {
+        wData = WORD_DATA?.core?.[selectedCoreLevel]?.[unitKey] || [];
+        iData = IDIOM_DATA?.core?.[selectedCoreLevel]?.[unitKey] || [];
+    } else {
+        wData = WORD_DATA?.[selectedBookId]?.[unitKey] || [];
+        iData = IDIOM_DATA?.[selectedBookId]?.[unitKey] || [];
+    }
+
+    // [修正點]：用 .flat() 確保無論資料是一層陣列還是多包了一層，都會變成扁平結構
+    wordList = [...(wData.flat()), ...(iData.flat())];
+
+    if (wordList.length === 0) {
+        alert(`該單元 (Unit ${unitNum}) 是空的，檢查一下資料檔是否寫錯。`);
+        return;
+    }
+
+    const levelText = selectedCoreLevel ? ` - ${selectedCoreLevel.toUpperCase()}` : "";
+    document.getElementById("mode-screen-subtitle").innerText = 
+        `已選：${selectedBookId}${levelText} Unit ${unitNum}（共 ${wordList.length} 題）`;
+
+    switchScreen("mode-screen");
+}
+
+
+
+
