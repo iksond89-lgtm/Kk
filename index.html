@@ -1,40 +1,177 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <title>簡宜學測複習</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學測英文單字測驗</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    background: #f5f5f5;
+    text-align: center;
+}
+
+.container {
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 12px;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+button {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.option {
+    background: #eee;
+}
+
+.option:hover {
+    background: #ddd;
+}
+
+.correct {
+    background: #4CAF50 !important;
+    color: white;
+}
+
+.wrong {
+    background: #f44336 !important;
+    color: white;
+}
+
+.top-bar {
+    padding: 10px;
+}
+
+select, button {
+    font-size: 16px;
+}
+</style>
 </head>
+
 <body>
 
-<h1>簡宜學測複習</h1>
+<div class="top-bar">
+    Unit：
+    <select id="unitSelect"></select>
 
-<div id="unit-page">
-    <h2>選擇 Unit</h2>
-    <div id="unit-buttons"></div>
+    模式：
+    <select id="modeSelect">
+        <option value="en-ch">英文 → 中文</option>
+        <option value="ch-en">中文 → 英文</option>
+    </select>
+
+    <button onclick="startQuiz()">開始測驗</button>
 </div>
 
-<div id="mode-page" style="display:none;">
-    <h2 id="selected-unit-title"></h2>
-    <button onclick="startQuiz('enToCh')">英翻中</button>
-    <button onclick="startQuiz('chToEn')">中翻英</button>
-    <button onclick="backToUnits()">返回</button>
+<div class="container">
+    <div class="card">
+        <h2 id="question">請開始測驗</h2>
+        <div id="options"></div>
+        <h3 id="result"></h3>
+        <button onclick="nextQuestion()">下一題</button>
+    </div>
 </div>
 
-<div id="quiz-page" style="display:none;">
-    <h2 id="question"></h2>
-    <input id="answerInput" type="text">
-    <button onclick="submitAnswer()">提交</button>
-    <button onclick="addWrong()">加入錯題</button>
-    <p id="result"></p>
-    <button onclick="nextQuestion()">下一題</button>
-</div>
+<!-- ✅ 外部單字資料 -->
+<script src="word-data.js"></script>
 
-<script src="b1-vocab.js"></script>
-<script src="wrongbook.js"></script>
+<script>
+// ========== 初始化 Unit ==========
+const unitSelect = document.getElementById("unitSelect");
 
-<!-- ⭐ GitHub Pages 必須用 defer -->
-<script src="app.js" defer></script>
+for (let i = 1; i <= 10; i++) {
+    let opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = "Unit " + i;
+    unitSelect.appendChild(opt);
+}
+
+let currentList = [];
+let correctAnswer = "";
+
+// ========== 開始測驗 ==========
+function startQuiz() {
+    let unit = unitSelect.value;
+
+    if (!WORD_DATA || !WORD_DATA.b1 || !WORD_DATA.b1[unit]) {
+        alert("單字資料沒讀到，請檢查 word-data.js");
+        return;
+    }
+
+    currentList = WORD_DATA.b1[unit];
+    nextQuestion();
+}
+
+// ========== 出題 ==========
+function nextQuestion() {
+    document.getElementById("result").textContent = "";
+
+    let mode = document.getElementById("modeSelect").value;
+
+    let q = currentList[Math.floor(Math.random() * currentList.length)];
+
+    let question = document.getElementById("question");
+    let optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    let options = [];
+
+    // 正確答案
+    correctAnswer = (mode === "en-ch") ? q.ch : q.eng;
+
+    // 產生 4 個選項
+    while (options.length < 4) {
+        let rand = currentList[Math.floor(Math.random() * currentList.length)];
+        let val = (mode === "en-ch") ? rand.ch : rand.eng;
+
+        if (!options.includes(val)) {
+            options.push(val);
+        }
+    }
+
+    // 放入正確答案
+    let index = Math.floor(Math.random() * 4);
+    options[index] = correctAnswer;
+
+    // 題目
+    question.textContent = (mode === "en-ch") ? q.eng : q.ch;
+
+    // 按鈕
+    options.forEach(opt => {
+        let btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = opt;
+
+        btn.onclick = function () {
+            if (opt === correctAnswer) {
+                btn.classList.add("correct");
+                document.getElementById("result").textContent = "正確";
+            } else {
+                btn.classList.add("wrong");
+                document.getElementById("result").textContent = "錯誤";
+            }
+        };
+
+        optionsDiv.appendChild(btn);
+    });
+}
+</script>
 
 </body>
 </html>
