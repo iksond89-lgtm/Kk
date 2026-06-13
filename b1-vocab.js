@@ -1,5 +1,7 @@
-export const WORD_DATA = {
-     "1": [
+
+const WORD_DATA = {
+    "b1": {
+        "1": [
             { "eng": "abandon", "ch": "拋棄；捨棄；放棄" },
             { "eng": "advantage", "ch": "優勢；益處" },
             { "eng": "amaze", "ch": "使吃驚" },
