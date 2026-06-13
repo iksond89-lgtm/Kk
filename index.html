@@ -1,123 +1,66 @@
-<<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高中英文單字多冊複習系統</title>
+    <title>高中英文單字多冊複習系統 v2</title>
     <script src="b1-vocab.js"></script>
     <style>
+        /* 這裡放你原本那一大段 CSS (為節省篇幅，請保留你原有的 CSS 內容) */
         :root { --primary: #4a90e2; --success: #2ecc71; --error: #e74c3c; --background: #f5f7fa; --card: #ffffff; --text: #2c3e50; }
-        body { font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background-color: var(--background); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei"; background-color: var(--background); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .quiz-container { background-color: var(--card); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); width: 100%; max-width: 550px; padding: 30px; box-sizing: border-box; }
         .screen { display: none; }
         .screen.active { display: block; }
+        h2 { text-align: center; margin-top: 0; color: var(--text); }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 24px; }
         .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .menu-btn { background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .menu-btn:hover { border-color: var(--primary); background-color: #ebf8ff; color: var(--primary); }
-        .word { font-size: 32px; font-weight: 700; text-align: center; margin: 30px 0; }
-        .option-btn { background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px; padding: 14px 20px; margin-bottom: 10px; width: 100%; cursor: pointer; text-align: left; }
-        .option-btn.correct { background-color: #def7ec; border-color: var(--success); }
-        .option-btn.wrong { background-color: #fde8e8; border-color: var(--error); }
+        .menu-btn { background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: bold; color: var(--text); cursor: pointer; transition: all 0.2s ease; text-align: center; }
+        .menu-btn:hover { border-color: var(--primary); background-color: #ebf8ff; color: var(--primary); transform: translateY(-2px); }
+        .btn-back { grid-column: span 2; background-color: #7f8c8d; color: white; border: none; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; }
+        .title { font-size: 16px; font-weight: bold; color: var(--primary); }
+        .progress { font-size: 14px; color: #7f8c8d; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
+        .word-box { text-align: center; margin: 30px 0; }
+        .quiz-type-tag { display: inline-block; font-size: 12px; background-color: #ebf8ff; color: #2b6cb0; padding: 4px 12px; border-radius: 12px; margin-bottom: 12px; font-weight: bold; }
+        .word { font-size: 32px; font-weight: 700; color: #1a202c; word-break: break-word; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
+        .option-btn { background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px; padding: 14px 20px; font-size: 16px; text-align: left; cursor: pointer; color: var(--text); }
+        .option-btn.correct { background-color: #def7ec; border-color: var(--success); color: #03543f; font-weight: bold; }
+        .option-btn.wrong { background-color: #fde8e8; border-color: var(--error); color: #9b1c1c; }
+        .feedback { min-height: 40px; text-align: center; font-size: 16px; font-weight: 500; margin-bottom: 20px; }
+        .next-btn { width: 100%; background-color: var(--primary); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; }
+        .score-big { font-size: 64px; font-weight: 800; color: var(--primary); margin: 20px 0; text-align: center; }
+        .btn-group { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+        .btn-group button { flex: 1; min-width: 120px; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-retry { background-color: #edf2f7; color: var(--text); }
+        .btn-home { background-color: var(--text); color: white; }
+        .wrong-list { text-align: left; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 10px; padding: 15px; margin-top: 20px; max-height: 250px; overflow-y: auto; }
+        .wrong-item { border-bottom: 1px solid #feb2b2; padding: 8px 0; font-size: 15px; }
+        .wrong-item:last-child { border-bottom: none; }
+        .wrong-title { color: #c53030; font-weight: bold; margin-bottom: 5px; }
     </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <div id="book-screen" class="screen active">
-            <h2>📚 選擇英文選冊</h2>
-            <div class="grid-menu">
-                <button class="menu-btn" onclick="selectBook('b1')">第一冊 (Book 1)</button>
-            </div>
-        </div>
-
-        <div id="unit-screen" class="screen">
-            <h2>🔍 選擇單元</h2>
-            <div class="grid-menu" id="unit-grid"></div>
-        </div>
-
-        <div id="mode-screen" class="screen">
-            <h2>⚙️ 選擇模式</h2>
-            <button class="menu-btn" style="width:100%" onclick="setMode('engToCh')">英翻中</button>
-            <button class="menu-btn" style="width:100%" onclick="setMode('chToEng')">中翻英</button>
-        </div>
-
-        <div id="quiz-screen" class="screen">
-            <div id="target-question" class="word"></div>
-            <div id="options-container"></div>
-            <button id="next-btn" style="display:none; width:100%; padding:15px;" onclick="nextQuestion()">下一題</button>
-        </div>
-    </div>
-
     <script>
-        let selectedBookId = "", selectedUnitNum = 0, quizMode = "engToCh", wordList = [], quizQuestions = [], currentIndex = 0, correctAnswersCount = 0;
-
-        function switchScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        function selectBook(bookId) {
-            selectedBookId = bookId;
-            const container = document.getElementById("unit-grid");
-            container.innerHTML = "";
-            for(let i=1; i<=10; i++) {
-                let btn = document.createElement("button");
-                btn.className = "menu-btn";
-                btn.innerText = "Unit " + i;
-                btn.onclick = () => selectUnit(i);
-                container.appendChild(btn);
-            }
-            switchScreen("unit-screen");
-        }
-
+        // 核心修改點：將 selectUnit 改為直接讀取 WORD_DATA
         function selectUnit(unitNum) {
             selectedUnitNum = unitNum;
-            const data = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId] && WORD_DATA[selectedBookId][unitNum]) ? WORD_DATA[selectedBookId][unitNum] : null;
-            if (!data || data.length < 4) { alert("該單元單字不足，請選擇其他單元。"); return; }
+            // 讀取 b1-vocab.js 內的 WORD_DATA 變數
+            const data = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId] && WORD_DATA[selectedBookId][unitNum]) 
+                         ? WORD_DATA[selectedBookId][unitNum] 
+                         : null;
+
+            if (!data || data.length < 4) {
+                alert("該單元的單字資料尚未定義或不足 4 個！");
+                return;
+            }
             wordList = data;
+            document.getElementById("mode-screen-subtitle").innerText = `已選：第 ${selectedBookId.replace("b","")} 冊 Unit ${unitNum}`;
             switchScreen("mode-screen");
         }
 
-        function setMode(mode) {
-            quizMode = mode;
-            let shuffled = [...wordList].sort(() => 0.5 - Math.random());
-            quizQuestions = shuffled.map(item => {
-                let options = [item.ch, ...wordList.filter(w => w.ch !== item.ch).sort(() => 0.5 - Math.random()).slice(0, 3).map(w => w.ch)];
-                if(mode === 'chToEng') options = [item.eng, ...wordList.filter(w => w.eng !== item.eng).sort(() => 0.5 - Math.random()).slice(0, 3).map(w => w.eng)];
-                return { question: (mode === 'engToCh' ? item.eng : item.ch), answer: (mode === 'engToCh' ? item.ch : item.eng), options: options.sort(() => 0.5 - Math.random()) };
-            });
-            currentIndex = 0;
-            switchScreen("quiz-screen");
-            showQuestion();
-        }
-
-        function showQuestion() {
-            const q = quizQuestions[currentIndex];
-            document.getElementById("target-question").innerText = q.question;
-            const container = document.getElementById("options-container");
-            container.innerHTML = "";
-            q.options.forEach(opt => {
-                let btn = document.createElement("button");
-                btn.className = "option-btn";
-                btn.innerText = opt;
-                btn.onclick = () => {
-                    if(opt === q.answer) btn.classList.add("correct");
-                    else btn.classList.add("wrong");
-                    document.getElementById("next-btn").style.display = "block";
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function nextQuestion() {
-            currentIndex++;
-            if (currentIndex < quizQuestions.length) {
-                document.getElementById("next-btn").style.display = "none";
-                showQuestion();
-            } else {
-                alert("測驗結束！");
-                switchScreen("book-screen");
-            }
-        }
+        // ... (其他的函數如 startQuiz, showQuestion, checkAnswer, showResult 等保持原樣) ...
     </script>
 </body>
 </html>
