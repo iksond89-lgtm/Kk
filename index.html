@@ -1,139 +1,115 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字複習系統</title>
-    <style>
-        :root { --primary: #4a90e2; --success: #2ecc71; --error: #e74c3c; --background: #f5f7fa; --card: #ffffff; --text: #2c3e50; }
-        body { font-family: sans-serif, "Microsoft JhengHei"; background-color: var(--background); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100svh; }
-        .quiz-container { background-color: var(--card); border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); width: 100%; max-width: 550px; padding: 30px; }
-        .screen { display: none; }
-        .screen.active { display: block; }
-        h2 { text-align: center; margin-top: 0; }
-        .grid-menu { display: grid; grid-template-columns: 1fr; gap: 14px; }
-        .menu-btn { background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .menu-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .word { font-size: 32px; font-weight: 700; text-align: center; margin: 30px 0; }
-        .option-btn { display: block; width: 100%; margin-bottom: 10px; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: pointer; text-align: left; }
-        .correct { background-color: #def7ec; border-color: #2ecc71; }
-        .wrong { background-color: #fde8e8; border-color: #e74c3c; }
-        .next-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; display: none; }
-    </style>
-</head>
-<body>
-
-<div class="quiz-container">
-    <div id="book-screen" class="screen active">
-        <h2>請選擇複習項目</h2>
-        <div class="grid-menu" id="main-menu-grid"></div>
-    </div>
-    <div id="unit-screen" class="screen">
-        <h2>選擇單元</h2>
-        <div class="grid-menu" id="unit-grid"></div>
-    </div>
-    <div id="quiz-screen" class="screen">
-        <div id="target-question" class="word"></div>
-        <div id="options-container"></div>
-        <button id="next-btn" class="next-btn" onclick="nextQuestion()">下一題</button>
-    </div>
-</div>
-
 <script>
-    // 單字資料庫
-    const WORD_DATA = {
-        "b1": {
-            "1": [ /* ... 你的單字資料 ... */ ],
-            "2": [ /* ... */ ],
-            // ... 其餘單元保持不變
-            // （我已幫你全部修正好逗號）
-        }
-    };
+const WORD_DATA = {
+    "b1": {
+        "1": [
+            { "eng": "abandon", "ch": "拋棄；捨棄；放棄" },
+            { "eng": "advantage", "ch": "優勢；益處" },
+            { "eng": "amaze", "ch": "使吃驚" },
+            { "eng": "assign", "ch": "分配；任命；指定" }
+        ],
+        "2": [
+            { "eng": "adventure", "ch": "冒險；冒險經歷" },
+            { "eng": "appliance", "ch": "器具；電器" },
+            { "eng": "assist", "ch": "幫助" },
+            { "eng": "bare", "ch": "裸露的" }
+        ]
+    }
+};
 
-    // 初始化選單
-    const BOOKS_CONFIG = [{ label: "簡宜學測複習", id: "b1" }];
-    const grid = document.getElementById("main-menu-grid");
-    BOOKS_CONFIG.forEach(item => {
+// 主選單
+const BOOKS_CONFIG = [{ label: "簡宜學測複習", id: "b1" }];
+
+const grid = document.getElementById("main-menu-grid");
+BOOKS_CONFIG.forEach(item => {
+    const btn = document.createElement("button");
+    btn.className = "menu-btn";
+    btn.innerText = item.label;
+    btn.onclick = () => selectBook(item.id);
+    grid.appendChild(btn);
+});
+
+let selectedBookId, quizQuestions = [], currentIndex = 0;
+
+function selectBook(id) {
+    selectedBookId = id;
+
+    const unitGrid = document.getElementById("unit-grid");
+    unitGrid.innerHTML = "";
+
+    for (let i = 1; i <= 10; i++) {
         const btn = document.createElement("button");
         btn.className = "menu-btn";
-        btn.innerText = item.label;
-        btn.onclick = () => selectBook(item.id);
-        grid.appendChild(btn);
+        btn.innerText = "Unit " + i;
+        btn.onclick = () => startQuiz(i);
+        unitGrid.appendChild(btn);
+    }
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('unit-screen').classList.add('active');
+}
+
+function startQuiz(unit) {
+    const data = WORD_DATA[selectedBookId][unit];
+
+    if (!data) {
+        alert("這個單元還沒有資料");
+        return;
+    }
+
+    quizQuestions = [...data].sort(() => Math.random() - 0.5);
+    currentIndex = 0;
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('quiz-screen').classList.add('active');
+
+    showQuestion();
+}
+
+function showQuestion() {
+    const q = quizQuestions[currentIndex];
+
+    document.getElementById('target-question').innerText = q.eng;
+
+    const cont = document.getElementById('options-container');
+    cont.innerHTML = "";
+
+    // 產生干擾選項（從同單元隨機抽）
+    const pool = quizQuestions.map(x => x.ch).filter(x => x !== q.ch);
+    const wrongs = pool.sort(() => Math.random() - 0.5).slice(0, 3);
+
+    q.options = [q.ch, ...wrongs].sort(() => Math.random() - 0.5);
+
+    q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = opt;
+
+        btn.onclick = () => {
+            const buttons = cont.querySelectorAll("button");
+
+            buttons.forEach(b => {
+                b.classList.remove("correct", "wrong");
+                if (b.innerText === q.ch) b.classList.add("correct");
+                else if (b === btn) b.classList.add("wrong");
+                b.disabled = true;
+            });
+
+            document.getElementById('next-btn').style.display = "block";
+        };
+
+        cont.appendChild(btn);
     });
 
-    let selectedBookId, selectedUnitNum, quizQuestions = [], currentIndex = 0;
+    document.getElementById('next-btn').style.display = "none";
+}
 
-    function selectBook(id) {
-        selectedBookId = id;
-        const unitGrid = document.getElementById("unit-grid");
-        unitGrid.innerHTML = "";
-        for(let i = 1; i <= 10; i++) {
-            const btn = document.createElement("button");
-            btn.className = "menu-btn";
-            btn.innerText = `Unit ${i}`;
-            btn.onclick = () => startQuiz(i);
-            unitGrid.appendChild(btn);
-        }
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('unit-screen').classList.add('active');
-    }
+function nextQuestion() {
+    currentIndex++;
 
-    function startQuiz(unit) {
-        selectedUnitNum = unit;
-        quizQuestions = WORD_DATA[selectedBookId][unit].sort(() => 0.5 - Math.random());
-        currentIndex = 0;
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('quiz-screen').classList.add('active');
+    if (currentIndex < quizQuestions.length) {
         showQuestion();
+    } else {
+        alert("結束！");
     }
-
-    function showQuestion() {
-        const q = quizQuestions[currentIndex];
-        document.getElementById('target-question').innerText = q.eng;
-        const cont = document.getElementById('options-container');
-        cont.innerHTML = "";
-
-        // 產生4個選項
-        const distractors = ["混淆選項A", "混淆選項B", "混淆選項C"];
-        q.options = [q.ch, ...distractors].sort(() => 0.5 - Math.random());
-
-        q.options.forEach(opt => {
-            const btn = document.createElement("button");
-            btn.className = "option-btn";
-            btn.innerText = opt;
-            btn.onclick = () => handleAnswer(btn, opt, q.ch, cont);
-            cont.appendChild(btn);
-        });
-    }
-
-    function handleAnswer(clickedBtn, selected, correct, container) {
-        // 禁用所有按鈕
-        container.querySelectorAll('button').forEach(b => b.disabled = true);
-
-        if (selected === correct) {
-            clickedBtn.classList.add("correct");
-        } else {
-            clickedBtn.classList.add("wrong");
-            // 顯示正確答案
-            container.querySelectorAll('button').forEach(b => {
-                if (b.innerText === correct) b.classList.add("correct");
-            });
-        }
-        document.getElementById('next-btn').style.display = "block";
-    }
-
-    function nextQuestion() {
-        currentIndex++;
-        if (currentIndex < quizQuestions.length) {
-            document.getElementById('next-btn').style.display = "none";
-            showQuestion();
-        } else {
-            alert("🎉 恭喜！本單元複習結束！");
-            // 可自行取消註解回到主選單
-            // document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            // document.getElementById('book-screen').classList.add('active');
-        }
-    }
+}
 </script>
-</body>
-</html>
