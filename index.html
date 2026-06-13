@@ -223,16 +223,21 @@
 
         function selectUnit(unitNum) {
             selectedUnitNum = unitNum;
-            const wordData = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId] && WORD_DATA[selectedBookId][unitNum]) ? WORD_DATA[selectedBookId][unitNum] : [];
-            const idiomData = (typeof IDIOM_DATA !== 'undefined' && IDIOM_DATA[selectedBookId] && IDIOM_DATA[selectedBookId][unitNum]) ? IDIOM_DATA[selectedBookId][unitNum] : [];
+            
+            // 修正：確保正確抓取 WORD_DATA 與 IDIOM_DATA
+            // 若為 b1-b4，確保變數正確抓取；若為 core 也能對應
+            const wData = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId]) ? WORD_DATA[selectedBookId][unitNum] : [];
+            const iData = (typeof IDIOM_DATA !== 'undefined' && IDIOM_DATA[selectedBookId]) ? IDIOM_DATA[selectedBookId][unitNum] : [];
 
-            const combined = [...wordData, ...idiomData];
-            if (combined.length < 4) {
-                alert("該單元資料不足，無法出題！");
+            // 強制合併，即便某一邊為 undefined 也不會中斷
+            wordList = [...(wData || []), ...(iData || [])];
+            
+            if (wordList.length === 0) {
+                alert("該單元資料庫為空，請檢查 b1-vocab.js 與 b1-idiom.js 的資料是否已載入！");
                 return;
             }
-            wordList = combined;
-            document.getElementById("mode-screen-subtitle").innerText = `已選：${selectedBookId} ${selectedUnitNum}（共 ${combined.length} 題）`;
+            
+            document.getElementById("mode-screen-subtitle").innerText = `已選：${selectedBookId} ${selectedUnitNum}（共 ${wordList.length} 題）`;
             switchScreen("mode-screen");
         }
 
