@@ -1,100 +1,41 @@
-let wrongList = [];
-let currentUnit = null;
-let currentIndex = 0;
-let mode = ""; // eng2ch or ch2eng
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>簡宜學測複習</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-const menu = document.getElementById("menu");
-const quiz = document.getElementById("quiz");
-const result = document.getElementById("result");
+    <h1>簡宜學測複習</h1>
 
-// 產生 unit 選單
-function showUnits() {
-    menu.innerHTML = "<h2>選擇 Unit</h2>";
+    <!-- Unit 選擇 -->
+    <div id="unit-page">
+        <h2>選擇 Unit</h2>
+        <div id="unit-buttons"></div>
+    </div>
 
-    for (let i = 1; i <= 10; i++) {
-        const btn = document.createElement("button");
-        btn.innerText = "Unit " + i;
-        btn.onclick = () => chooseUnit(i);
-        menu.appendChild(btn);
-    }
-}
+    <!-- 模式選擇 -->
+    <div id="mode-page" style="display:none;">
+        <h2 id="selected-unit-title"></h2>
+        <button onclick="startQuiz('enToCh')">英翻中</button>
+        <button onclick="startQuiz('chToEn')">中翻英</button>
+        <button onclick="backToUnits()">返回</button>
+    </div>
 
-function chooseUnit(unit) {
-    currentUnit = WORD_DATA.b1[unit];
-    menu.innerHTML = `
-        <h2>Unit ${unit}</h2>
-        <button onclick="startQuiz('eng2ch')">英翻中</button>
-        <button onclick="startQuiz('ch2eng')">中翻英</button>
-    `;
-}
+    <!-- 測驗 -->
+    <div id="quiz-page" style="display:none;">
+        <h2 id="question"></h2>
+        <input type="text" id="answerInput">
+        <button onclick="submitAnswer()">提交</button>
+        <button onclick="addWrong()">加入錯題</button>
+        <p id="result"></p>
+        <button onclick="nextQuestion()">下一題</button>
+    </div>
 
-// 開始測驗
-function startQuiz(m) {
-    mode = m;
-    currentIndex = 0;
-    wrongList = [];
-    showQuestion();
-}
+    <script src="b1-vocab.js"></script>
+    <script src="wrongbook.js"></script>
+    <script src="app.js"></script>
 
-// 顯示題目
-function showQuestion() {
-    const word = currentUnit[currentIndex];
-
-    if (!word) {
-        finishQuiz();
-        return;
-    }
-
-    let question = mode === "eng2ch" ? word.eng : word.ch;
-    let answerType = mode === "eng2ch" ? "中文" : "英文";
-
-    quiz.innerHTML = `
-        <h3>${question}</h3>
-        <input id="answer" placeholder="輸入${answerType}">
-        <button onclick="checkAnswer()">提交</button>
-    `;
-}
-
-// 檢查答案
-function checkAnswer() {
-    const word = currentUnit[currentIndex];
-    const userAns = document.getElementById("answer").value.trim();
-
-    let correct = mode === "eng2ch" ? word.ch : word.eng;
-
-    if (userAns !== correct) {
-        wrongList.push({
-            question: mode === "eng2ch" ? word.eng : word.ch,
-            correct: correct,
-            user: userAns
-        });
-    }
-
-    currentIndex++;
-    showQuestion();
-}
-
-// 完成測驗
-function finishQuiz() {
-    quiz.innerHTML = "<h2>測驗完成</h2>";
-
-    if (wrongList.length === 0) {
-        result.innerHTML = "<p>全對！</p>";
-        return;
-    }
-
-    let html = "<h3>錯題本</h3><ul>";
-    wrongList.forEach(w => {
-        html += `<li>
-            題目：${w.question} <br>
-            你的答案：${w.user} <br>
-            正確：${w.correct}
-        </li><br>`;
-    });
-    html += "</ul>";
-
-    result.innerHTML = html;
-}
-
-// 初始化
-showUnits();
+</body>
+</html>
