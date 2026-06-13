@@ -98,7 +98,6 @@
         .btn-retry { background-color: #edf2f7; color: var(--text); }
         .btn-home { background-color: var(--text); color: white; }
 
-        /* ❌ 錯題本專用樣式 */
         .wrong-list { text-align: left; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 10px; padding: 15px; margin-top: 20px; max-height: 250px; overflow-y: auto; }
         .wrong-item { border-bottom: 1px solid #feb2b2; padding: 8px 0; font-size: 15px; }
         .wrong-item:last-child { border-bottom: none; }
@@ -184,15 +183,14 @@
     <script>
         let selectedBookId = "";
         let selectedUnitNum = 0;
-        let quizMode = "engToCh"; // engToCh 或 chToEng
+        let quizMode = "engToCh"; 
         let wordList = [];
         let quizQuestions = [];
         let currentIndex = 0;
         let correctAnswersCount = 0;
         let hasAnswered = false;
-        let wrongRecords = []; // 紀錄錯題
+        let wrongRecords = []; 
 
-        // 自動推算詞性的小幫手
         function getPosTag(chText) {
             if (chText.includes("的")) return "[adj. 形容詞]";
             if (chText.includes("地")) return "[adv. 副詞]";
@@ -243,7 +241,7 @@
         }
 
         function startQuiz() {
-            wrongRecords = []; // 清空上一次的錯題
+            wrongRecords = []; 
             let shuffledLesson = [...wordList].sort(() => 0.5 - Math.random());
 
             quizQuestions = shuffledLesson.map(item => {
@@ -255,12 +253,10 @@
                 let correctAnswer = "";
 
                 if (quizMode === "engToCh") {
-                    // 英翻中模式
                     questionText = item.eng;
                     correctAnswer = item.ch;
                     options = [item.ch, shuffledWrong[0].ch, shuffledWrong[1].ch, shuffledWrong[2].ch];
                 } else {
-                    // 中翻英模式：加上自動詞性標籤提示
                     let pos = getPosTag(item.ch);
                     questionText = `${pos} ${item.ch}`;
                     correctAnswer = item.eng;
@@ -325,7 +321,6 @@
                 }
                 document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">❌ 答案是：${q.answer}</span>`;
                 
-                // 儲存錯題紀錄
                 wrongRecords.push({
                     eng: q.rawWord,
                     ch: q.rawCh,
@@ -335,7 +330,6 @@
             document.getElementById("next-btn").style.display = "block";
         }
 
-        function model-nextQuestion() { /* 注意：綁定的是 nextQuestion */ }
         function nextQuestion() {
             currentIndex++;
             if (currentIndex < quizQuestions.length) {
@@ -357,7 +351,6 @@
             else if (finalScore >= 60) evalText = "及格囉！繼續加油！👍";
             document.getElementById("evaluation-text").innerText = evalText;
 
-            // 處理錯題顯示
             const wrongSection = document.getElementById("wrong-answers-section");
             const wrongContainer = document.getElementById("wrong-list-container");
             
@@ -383,4 +376,4 @@
         }
     </script>
 </body>
-</ht>
+</html>
