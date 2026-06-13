@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNIT 01 單字片語複習</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --background: #f5f7fa;
+            --card: #ffffff;
+            --text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            background-color: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 550px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 12px;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .progress {
+            font-size: 14px;
+            color: #7f8c8d;
+            background: #e2e8f0;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .word-box {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .quiz-type-tag {
+            display: inline-block;
+            font-size: 12px;
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .word {
+            font-size: 34px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 20px;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+
+        .option-btn:hover {
+            background-color: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .option-btn.correct {
+            background-color: #def7ec;
+            border-color: var(--success);
+            color: #03543f;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background-color: #fde8e8;
+            border-color: var(--error);
+            color: #9b1c1c;
+        }
+
+        .feedback {
+            min-height: 40px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .next-btn {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .score-big {
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .restart-btn {
+            background-color: var(--text);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div id="quiz-box">
+            <div class="header">
+                <div class="title">⚡ UNIT 01 雙向測驗</div>
+                <div class="progress" id="progress-text">1 / 5</div>
+            </div>
+
+            <div class="word-box">
+                <div class="quiz-type-tag" id="quiz-type">題型</div>
+                <div class="word" id="target-question">loading...</div>
+            </div>
+
+            <div class="options-grid" id="options-container"></div>
+
+            <div class="feedback" id="feedback-text"></div>
+            <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一題 ➔</button>
+        </div>
+
+        <div id="result-box" class="result-screen">
+            <h2>🎉 本課測驗完成！</h2>
+            <p>你的得分是</p>
+            <div class="score-big" id="final-score">0</div>
+            <p id="evaluation-text"></p>
+            <button class="restart-btn" onclick="startQuiz()">再測一次</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        //  📖 UNIT 01 圈選單字與重要片語庫
+        // ==========================================
+        const currentLesson = [
+            { eng: "bankrupt", ch: "破產的" },
+            { eng: "billion", ch: "十億" },
+            { eng: "boast", ch: "自誇" },
+            { eng: "complicate", ch: "使複雜" },
+            { eng: "converse", ch: "交談" },
+            { eng: "dispute", ch: "爭論；辯論" },
+            { eng: "earnest", ch: "誠摯的；認真的" },
+            { eng: "fragrance", ch: "芳香；香氣" },
+            { eng: "guilty", ch: "有罪的；內疚的" },
+            { eng: "laboratory", ch: "實驗室" },
+            { eng: "leather", ch: "皮革" },
+            { eng: "lung", ch: "肺" },
+            { eng: "pause", ch: "停頓；暫停" },
+            { eng: "portion", ch: "一部分；一份" },
+            { eng: "procedure", ch: "手續；程序" },
+            { eng: "suburb", ch: "郊區" },
+            { eng: "evidence", ch: "證據" },
+            { eng: "catch up", ch: "趕上" },
+            { eng: "keep up", ch: "保持；(使)不停止" }
+        ];
+
+        let quizQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+
+        function startQuiz() {
+            // 從單字本隨機抽出 5 個單字來考試
+            let shuffledLesson = [...currentLesson].sort(() => 0.5 - Math.random());
+            let selectedWords = shuffledLesson.slice(0, 5);
+
+            // 建立題目，隨機決定這題是「考英文」還是「考中文」
+            quizQuestions = selectedWords.map(item => {
+                const isEngToCh = Math.random() > 0.5; // 50% 機率決定模式
+                
+                // 產生干擾選項
+                let wrongPool = currentLesson.filter(w => w.eng !== item.eng);
+                let shuffledWrong = wrongPool.sort(() => 0.5 - Math.random());
+                
+                let options = [];
+                let correctAnswer = "";
+
+                if (isEngToCh) {
+                    correctAnswer = item.ch;
+                    options = [item.ch, shuffledWrong[0].ch, shuffledWrong[1].ch, shuffledWrong[2].ch];
+                } else {
+                    correctAnswer = item.eng;
+                    options = [item.eng, shuffledWrong[0].eng, shuffledWrong[1].eng, shuffledWrong[2].eng];
+                }
+
+                // 打亂選項順序
+                options.sort(() => 0.5 - Math.random());
+
+                return {
+                    question: isEngToCh ? item.eng : item.ch,
+                    type: isEngToCh ? "請選擇正確的中文意思" : "請選擇正確的英文單字",
+                    options: options,
+                    answer: correctAnswer
+                };
+            });
+
+            currentIndex = 0;
+            score = 0;
+            document.getElementById("quiz-box").style.display = "block";
+            document.getElementById("result-box").style.display = "none";
+            showQuestion();
+        }
+
+        function showQuestion() {
+            hasAnswered = false;
+            document.getElementById("next-btn").style.display = "none";
+            document.getElementById("feedback-text").innerText = "";
+            
+            const q = quizQuestions[currentIndex];
+            document.getElementById("progress-text").innerText = `${currentIndex + 1} / ${quizQuestions.length}`;
+            document.getElementById("quiz-type").innerText = q.type;
+            document.getElementById("target-question").innerText = q.question;
+
+            const optionsContainer = document.getElementById("options-container");
+            optionsContainer.innerHTML = "";
+
+            q.options.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOpt, clickedBtn) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+
+            const q = quizQuestions[currentIndex];
+            const buttons = document.getElementsByClassName("option-btn");
+
+            if (selectedOpt === q.answer) {
+                clickedBtn.classList.add("correct");
+                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--success)">💯 太棒了！答對了</span>`;
+                score += 20;
+            } else {
+                clickedBtn.classList.add("wrong");
+                for (let btn of buttons) {
+                    if (btn.innerText === q.answer) {
+                        btn.classList.add("correct");
+                    }
+                }
+                document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">❌ 答錯囉！答案是：${q.answer}</span>`;
+            }
+
+            document.getElementById("next-btn").style.display = "block";
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < quizQuestions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById("quiz-box").style.display = "none";
+            document.getElementById("result-box").style.display = "block";
+            document.getElementById("final-score").innerText = score;
+
+            let evalText = "";
+            if (score === 100) evalText = "達成本課全對成就！太神了！🏆";
+            else if (score >= 60) evalText = "很棒！這課差不多熟了！✨";
+            else evalText = "沒關係，再測一次加深印象！💪";
+            
+            document.getElementById("evaluation-text").innerText = evalText;
+        }
+
+        startQuiz();
+    </script>
+</body>
+</html>
