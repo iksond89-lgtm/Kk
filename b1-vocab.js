@@ -54,7 +54,6 @@ const WORD_DATA = {
             { "eng": "wipe", "ch": "擦拭；消除" }
         ],
        "2": [
-            [
     { "eng": "adventure", "ch": "冒險；冒險經歷" },
     { "eng": "appliance", "ch": "器具；(家用)電器" },
     { "eng": "assist", "ch": "幫助 = help" },
