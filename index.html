@@ -164,7 +164,7 @@
         </div>
 
         <div id="result-screen" class="screen" style="text-align: center;">
-            <h2>🎉 測驗完成！</h2>
+            <h2>測驗結束</h2>
             <p id="stats-text">答對題數：0 / 0</p>
             <div class="score-big" id="final-score">0</div>
             <p id="evaluation-text"></p>
@@ -174,7 +174,7 @@
             </div>
             <div class="btn-group">
                 <button class="btn-retry" onclick="retryQuiz()">再測一次</button>
-                <button class="btn-home" onclick="switchScreen('book-screen')">回首頁 🏠</button>
+                <button class="btn-home" onclick="switchScreen('book-screen')">回首頁</button>
             </div>
         </div>
     </div>
@@ -325,7 +325,7 @@
             let finalScore = Math.round((correctAnswersCount / quizQuestions.length) * 100);
             document.getElementById("stats-text").innerText = `答對題數：${correctAnswersCount} / ${quizQuestions.length}`;
             document.getElementById("final-score").innerText = finalScore;
-            let evalText = finalScore === 100 ? "太完美了！完全征服！🏆" : (finalScore >= 80 ? "非常厲害！快要全熟了！🔥" : (finalScore >= 60 ? "及格囉！繼續加油！👍" : "再接再厲！"));
+            let evalText = finalScore === 100 ? "不要太驕傲，人外有人天外有天" : (finalScore >= 80 ? "沒有很高 隔壁的阿明都考100分" : (finalScore >= 60 ? "快不及格了 沒什麼好高興的" : "你什麼意思"));
             document.getElementById("evaluation-text").innerText = evalText;
             const wrongSection = document.getElementById("wrong-answers-section");
             const wrongContainer = document.getElementById("wrong-list-container");
