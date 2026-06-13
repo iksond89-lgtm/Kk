@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIT 01 單字片語複習</title>
+    <title>高中英文單字總複習系統</title>
     <style>
         :root {
             --primary: #4a90e2;
@@ -36,6 +36,55 @@
             box-sizing: border-box;
         }
 
+        /* 畫面切換控制 */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: var(--text);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 24px;
+        }
+
+        /* 首頁選單網格 */
+        .unit-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .unit-btn {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .unit-btn:hover {
+            border-color: var(--primary);
+            background-color: #ebf8ff;
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* 測驗畫面樣式 */
         .header {
             display: flex;
             justify-content: space-between;
@@ -46,7 +95,7 @@
         }
 
         .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--primary);
         }
@@ -126,7 +175,7 @@
             margin-bottom: 20px;
         }
 
-        .next-btn {
+        .next-btn, .nav-btn {
             width: 100%;
             background-color: var(--primary);
             color: white;
@@ -136,13 +185,16 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            display: none;
             box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
         }
 
+        .next-btn {
+            display: none;
+        }
+
+        /* 結算畫面樣式 */
         .result-screen {
             text-align: center;
-            display: none;
         }
 
         .score-big {
@@ -152,25 +204,58 @@
             margin: 20px 0;
         }
 
-        .restart-btn {
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .btn-group button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-retry {
+            background-color: #edf2f7;
+            color: var(--text);
+        }
+
+        .btn-home {
             background-color: var(--text);
             color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 12px 24px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
     <div class="quiz-container">
-        <div id="quiz-box">
+        
+        <div id="home-screen" class="screen active">
+            <h2>⚡ 英文單字總複習 ⚡</h2>
+            <div class="subtitle">請選擇要挑戰的 Unit 開始測驗</div>
+            <div class="unit-grid">
+                <button class="unit-btn" onclick="selectUnit('unit01')">Unit 01</button>
+                <button class="unit-btn" onclick="selectUnit('unit02')">Unit 02</button>
+                <button class="unit-btn" onclick="selectUnit('unit03')">Unit 03</button>
+                <button class="unit-btn" onclick="selectUnit('unit04')">Unit 04</button>
+                <button class="unit-btn" onclick="selectUnit('unit05')">Unit 05</button>
+                <button class="unit-btn" onclick="selectUnit('unit06')">Unit 06</button>
+                <button class="unit-btn" onclick="selectUnit('unit07')">Unit 07</button>
+                <button class="unit-btn" onclick="selectUnit('unit08')">Unit 08</button>
+                <button class="unit-btn" onclick="selectUnit('unit09')">Unit 09</button>
+                <button class="unit-btn" onclick="selectUnit('unit10')">Unit 10</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
             <div class="header">
-                <div class="title">⚡ UNIT 01 雙向測驗</div>
-                <div class="progress" id="progress-text">1 / 5</div>
+                <div class="title" id="quiz-title">UNIT 01 挑戰中</div>
+                <div class="progress" id="progress-text">1 / --</div>
             </div>
 
             <div class="word-box">
@@ -184,57 +269,103 @@
             <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一題 ➔</button>
         </div>
 
-        <div id="result-box" class="result-screen">
-            <h2>🎉 本課測驗完成！</h2>
+        <div id="result-screen" class="screen result-screen">
+            <h2>🎉 測驗完成！</h2>
+            <p id="stats-text">答對題數：0 / 0</p>
             <p>你的得分是</p>
             <div class="score-big" id="final-score">0</div>
             <p id="evaluation-text"></p>
-            <button class="restart-btn" onclick="startQuiz()">再測一次</button>
+            
+            <div class="btn-group">
+                <button class="btn-retry" onclick="restartCurrentUnit()">再測一次</button>
+                <button class="btn-home" onclick="goHome()">回首頁 🏠</button>
+            </div>
         </div>
+
     </div>
 
     <script>
-        // ==========================================
-        //  📖 UNIT 01 圈選單字與重要片語庫
-        // ==========================================
-        const currentLesson = [
-            { eng: "bankrupt", ch: "破產的" },
-            { eng: "billion", ch: "十億" },
-            { eng: "boast", ch: "自誇" },
-            { eng: "complicate", ch: "使複雜" },
-            { eng: "converse", ch: "交談" },
-            { eng: "dispute", ch: "爭論；辯論" },
-            { eng: "earnest", ch: "誠摯的；認真的" },
-            { eng: "fragrance", ch: "芳香；香氣" },
-            { eng: "guilty", ch: "有罪的；內疚的" },
-            { eng: "laboratory", ch: "實驗室" },
-            { eng: "leather", ch: "皮革" },
-            { eng: "lung", ch: "肺" },
-            { eng: "pause", ch: "停頓；暫停" },
-            { eng: "portion", ch: "一部分；一份" },
-            { eng: "procedure", ch: "手續；程序" },
-            { eng: "suburb", ch: "郊區" },
-            { eng: "evidence", ch: "證據" },
-            { eng: "catch up", ch: "趕上" },
-            { eng: "keep up", ch: "保持；(使)不停止" }
-        ];
+        // ========================================================
+        //  📖 這裡管理 10 個 Unit 的單字資料庫
+        //  💡 之後有新的一課，直接貼進對應單元的中括號 [] 裡面即可！
+        // ========================================================
+        const allUnitsData = {
+            unit01: [
+                { eng: "bankrupt", ch: "破產的" },
+                { eng: "billion", ch: "十億" },
+                { eng: "boast", ch: "自誇" },
+                { eng: "complicate", ch: "使複雜" },
+                { eng: "converse", ch: "交談" },
+                { eng: "dispute", ch: "爭論；辯論" },
+                { eng: "earnest", ch: "誠摯的；認真的" },
+                { eng: "fragrance", ch: "芳香；香氣" },
+                { eng: "guilty", ch: "有罪的；內疚的" },
+                { eng: "laboratory", ch: "實驗室" },
+                { eng: "leather", ch: "皮革" },
+                { eng: "lung", ch: "肺" },
+                { eng: "pause", ch: "停頓；暫停" },
+                { eng: "portion", ch: "一部分；一份" },
+                { eng: "procedure", ch: "手續；程序" },
+                { eng: "suburb", ch: "郊區" },
+                { eng: "evidence", ch: "證據" },
+                { eng: "catch up", ch: "趕上" },
+                { eng: "keep up", ch: "保持；(使)不停止" }
+            ],
+            unit02: [
+                // 💡 範例格式： { eng: "apple", ch: "蘋果" }
+            ],
+            unit03: [],
+            unit04: [],
+            unit05: [],
+            unit06: [],
+            unit07: [],
+            unit08: [],
+            unit09: [],
+            unit10: []
+        };
 
+        let currentActiveUnit = "";
         let quizQuestions = [];
         let currentIndex = 0;
-        let score = 0;
+        let correctAnswersCount = 0;
         let hasAnswered = false;
 
-        function startQuiz() {
-            // 從單字本隨機抽出 5 個單字來考試
-            let shuffledLesson = [...currentLesson].sort(() => 0.5 - Math.random());
-            let selectedWords = shuffledLesson.slice(0, 5);
+        // 切換畫面的函式
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
 
-            // 建立題目，隨機決定這題是「考英文」還是「考中文」
-            quizQuestions = selectedWords.map(item => {
-                const isEngToCh = Math.random() > 0.5; // 50% 機率決定模式
+        // 首頁點擊 Unit
+        function selectUnit(unitKey) {
+            const wordList = allUnitsData[unitKey];
+            
+            // 檢查該單元有沒有放單字
+            if (!wordList || wordList.length < 4) {
+                alert("這個 Unit 目前還沒有輸入足夠的單字喔！（至少需放4個單字當作干擾選項）");
+                return;
+            }
+
+            currentActiveUnit = unitKey;
+            
+            // 更新網頁標題顯示
+            const unitNumber = unitKey.replace("unit", "");
+            document.getElementById("quiz-title").innerText = `UNIT ${unitNumber} 大挑戰`;
+            
+            startQuiz(wordList);
+        }
+
+        // 開始測驗核心邏輯
+        function startQuiz(wordList) {
+            // 1. 打亂該單元所有單字的順序（一次全部考完）
+            let shuffledLesson = [...wordList].sort(() => 0.5 - Math.random());
+
+            // 2. 建立所有題目，隨機決定「考英文」還是「考中文」
+            quizQuestions = shuffledLesson.map(item => {
+                const isEngToCh = Math.random() > 0.5;
                 
-                // 產生干擾選項
-                let wrongPool = currentLesson.filter(w => w.eng !== item.eng);
+                // 從當前單元中抓取錯誤選項
+                let wrongPool = wordList.filter(w => w.eng !== item.eng);
                 let shuffledWrong = wrongPool.sort(() => 0.5 - Math.random());
                 
                 let options = [];
@@ -260,12 +391,12 @@
             });
 
             currentIndex = 0;
-            score = 0;
-            document.getElementById("quiz-box").style.display = "block";
-            document.getElementById("result-box").style.display = "none";
+            correctAnswersCount = 0;
+            switchScreen("quiz-screen");
             showQuestion();
         }
 
+        // 顯示單一題目
         function showQuestion() {
             hasAnswered = false;
             document.getElementById("next-btn").style.display = "none";
@@ -288,6 +419,7 @@
             });
         }
 
+        // 檢查答案
         function checkAnswer(selectedOpt, clickedBtn) {
             if (hasAnswered) return;
             hasAnswered = true;
@@ -298,7 +430,7 @@
             if (selectedOpt === q.answer) {
                 clickedBtn.classList.add("correct");
                 document.getElementById("feedback-text").innerHTML = `<span style="color:var(--success)">💯 太棒了！答對了</span>`;
-                score += 20;
+                correctAnswersCount++;
             } else {
                 clickedBtn.classList.add("wrong");
                 for (let btn of buttons) {
@@ -312,6 +444,7 @@
             document.getElementById("next-btn").style.display = "block";
         }
 
+        // 下一題
         function nextQuestion() {
             currentIndex++;
             if (currentIndex < quizQuestions.length) {
@@ -321,20 +454,35 @@
             }
         }
 
+        // 顯示結果結算
         function showResult() {
-            document.getElementById("quiz-box").style.display = "none";
-            document.getElementById("result-box").style.display = "block";
-            document.getElementById("final-score").innerText = score;
+            switchScreen("result-screen");
+            
+            let finalScore = Math.round((correctAnswersCount / quizQuestions.length) * 100);
+            
+            document.getElementById("stats-text").innerText = `答對題數：${correctAnswersCount} / ${quizQuestions.length}`;
+            document.getElementById("final-score").innerText = finalScore;
 
             let evalText = "";
-            if (score === 100) evalText = "達成本課全對成就！太神了！🏆";
-            else if (score >= 60) evalText = "很棒！這課差不多熟了！✨";
-            else evalText = "沒關係，再測一次加深印象！💪";
+            if (finalScore === 100) evalText = "太完美了！這個單元你已經完全征服！🏆";
+            else if (finalScore >= 80) evalText = "非常厲害！快要全熟了，再接再厲！🔥";
+            else if (finalScore >= 60) evalText = "及格囉！把記錯的再複習一下！👍";
+            else evalText = "還不夠熟練喔，多挑戰幾次一定行！💪";
             
             document.getElementById("evaluation-text").innerText = evalText;
         }
 
-        startQuiz();
+        // 功能按鈕：再測一次
+        function restartCurrentUnit() {
+            if (currentActiveUnit) {
+                startQuiz(allUnitsData[currentActiveUnit]);
+            }
+        }
+
+        // 功能按鈕：回首頁
+        function goHome() {
+            switchScreen("home-screen");
+        }
     </script>
 </body>
 </html>
