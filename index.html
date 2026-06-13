@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高中英文單字多冊複習系統 v2</title>
+    <title>高中英文單字複習系統 (Book 1)</title>
     <script src="b1-vocab.js"></script>
     <script src="b1-idiom.js"></script>
     <style>
@@ -70,12 +69,7 @@
             transform: translateY(-2px);
         }
 
-        .btn-back {
-            grid-column: span 2;
-            background-color: #7f8c8d;
-            color: white;
-            border: none;
-        }
+        .btn-full { grid-column: span 2; }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; }
         .title { font-size: 16px; font-weight: bold; color: var(--primary); }
@@ -111,13 +105,10 @@
 
     <div class="quiz-container">
         <div id="book-screen" class="screen active">
-            <h2>📚 選擇英文選冊</h2>
-            <div class="subtitle">請選擇你要複習的課本冊別</div>
+            <h2>📚 英文單字複習</h2>
+            <div class="subtitle">請進入第一冊練習</div>
             <div class="grid-menu">
-                <button class="menu-btn" onclick="selectBook('b1')">第一冊 (Book 1)</button>
-                <button class="menu-btn" onclick="selectBook('b2')">第二冊 (Book 2)</button>
-                <button class="menu-btn" onclick="selectBook('b3')">第三冊 (Book 3)</button>
-                <button class="menu-btn" onclick="selectBook('b4')">第四冊 (Book 4)</button>
+                <button class="menu-btn btn-full" onclick="selectBook('b1')">開始複習 簡宜學測複習</button>
             </div>
         </div>
 
@@ -135,7 +126,7 @@
                 <button class="menu-btn" onclick="selectUnit(8)">Unit 08</button>
                 <button class="menu-btn" onclick="selectUnit(9)">Unit 09</button>
                 <button class="menu-btn" onclick="selectUnit(10)">Unit 10</button>
-                <button class="menu-btn btn-back" onclick="switchScreen('book-screen')">⬅ 回到選冊</button>
+                <button class="menu-btn btn-full" style="background-color: #7f8c8d; color: white;" onclick="switchScreen('book-screen')">⬅ 回到首頁</button>
             </div>
         </div>
 
@@ -144,8 +135,8 @@
             <div class="subtitle" id="mode-screen-subtitle">請選擇出題版本</div>
             <div class="grid-menu" style="grid-template-columns: 1fr;">
                 <button class="menu-btn" onclick="setMode('engToCh')">英翻中</button>
-                <button class="menu-btn" onclick="setMode('chToEng')">中翻英(看中文選英文 + 詞性提示)</button>
-                <button class="menu-btn btn-back" onclick="switchScreen('unit-screen')">⬅ 回到選單元</button>
+                <button class="menu-btn" onclick="setMode('chToEng')">中翻英 (含詞性提示)</button>
+                <button class="menu-btn" style="background-color: #7f8c8d; color: white;" onclick="switchScreen('unit-screen')">⬅ 回到選單元</button>
             </div>
         </div>
 
@@ -205,32 +196,28 @@
 
         function selectBook(bookId) {
             selectedBookId = bookId;
-            const bookNum = bookId.replace("b", "");
-            document.getElementById("unit-screen-subtitle").innerText = `目前已選：第 ${bookNum} 冊，請選單元`;
+            document.getElementById("unit-screen-subtitle").innerText = `已選擇：第 1 冊，請選擇單元`;
             switchScreen("unit-screen");
         }
 
-        // 核心邏輯：合併單字 (50題) + 片語 (10題) = 60題
         function selectUnit(unitNum) {
             selectedUnitNum = unitNum;
-
             const wordData = (typeof WORD_DATA !== 'undefined' && WORD_DATA[selectedBookId] && WORD_DATA[selectedBookId][unitNum]) ? WORD_DATA[selectedBookId][unitNum] : [];
             const idiomData = (typeof IDIOM_DATA !== 'undefined' && IDIOM_DATA[selectedBookId] && IDIOM_DATA[selectedBookId][unitNum]) ? IDIOM_DATA[selectedBookId][unitNum] : [];
-
             const combined = [...wordData, ...idiomData];
 
             if (combined.length < 4) {
-                alert("該單元單字／片語資料不存在或不足 4 個！");
+                alert("該單元資料不足！");
                 return;
             }
             wordList = combined;
-            document.getElementById("mode-screen-subtitle").innerText = `已選：第 ${selectedBookId.replace("b","")} 冊 Unit ${unitNum}（單字50 + 片語10 = 共60題）`;
+            document.getElementById("mode-screen-subtitle").innerText = `第一冊 Unit ${unitNum}（共 ${combined.length} 題）`;
             switchScreen("mode-screen");
         }
 
         function setMode(mode) {
             quizMode = mode;
-            document.getElementById("quiz-title").innerText = `第 ${selectedBookId.replace("b","")} 冊 Unit ${selectedUnitNum}`;
+            document.getElementById("quiz-title").innerText = `第 1 冊 Unit ${selectedUnitNum}`;
             startQuiz();
         }
 
@@ -256,17 +243,8 @@
                     correctAnswer = item.eng;
                     options = [item.eng, shuffledWrong[0].eng, shuffledWrong[1].eng, shuffledWrong[2].eng];
                 }
-
                 options.sort(() => 0.5 - Math.random());
-
-                return {
-                    rawWord: item.eng,
-                    rawCh: item.ch,
-                    question: questionText,
-                    type: quizMode === "engToCh" ? "請選擇正確的中文意思" : "請選擇正確的英文單字",
-                    options: options,
-                    answer: correctAnswer
-                };
+                return { rawWord: item.eng, rawCh: item.ch, question: questionText, type: quizMode === "engToCh" ? "請選擇中文意思" : "請選擇英文單字", options: options, answer: correctAnswer };
             });
 
             currentIndex = 0;
@@ -305,9 +283,7 @@
                 correctAnswersCount++;
             } else {
                 clickedBtn.classList.add("wrong");
-                for (let btn of buttons) {
-                    if (btn.innerText === q.answer) btn.classList.add("correct");
-                }
+                for (let btn of buttons) if (btn.innerText === q.answer) btn.classList.add("correct");
                 document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">❌ 答案是：${q.answer}</span>`;
                 wrongRecords.push({ eng: q.rawWord, ch: q.rawCh, yourAnswer: selectedOpt });
             }
@@ -323,15 +299,13 @@
         function showResult() {
             switchScreen("result-screen");
             let finalScore = Math.round((correctAnswersCount / quizQuestions.length) * 100);
-            document.getElementById("stats-text").innerText = `答對題數：${correctAnswersCount} / ${quizQuestions.length}`;
+            document.getElementById("stats-text").innerText = `答對：${correctAnswersCount} / ${quizQuestions.length}`;
             document.getElementById("final-score").innerText = finalScore;
-            let evalText = finalScore === 100 ? "太完美了！完全征服！🏆" : (finalScore >= 80 ? "非常厲害！快要全熟了！🔥" : (finalScore >= 60 ? "及格囉！繼續加油！👍" : "再接再厲！"));
-            document.getElementById("evaluation-text").innerText = evalText;
+            document.getElementById("evaluation-text").innerText = finalScore === 100 ? "太完美了！" : (finalScore >= 80 ? "很厲害！" : "再接再厲！");
             const wrongSection = document.getElementById("wrong-answers-section");
-            const wrongContainer = document.getElementById("wrong-list-container");
             if (wrongRecords.length > 0) {
                 wrongSection.style.display = "block";
-                wrongContainer.innerHTML = wrongRecords.map((item, i) => `<div class="wrong-item"><strong>${i + 1}. ${item.eng}</strong> (${item.ch})<br><span style="color:var(--error)">你的答案: ${item.yourAnswer}</span></div>`).join("");
+                document.getElementById("wrong-list-container").innerHTML = wrongRecords.map((item, i) => `<div class="wrong-item"><strong>${i+1}. ${item.eng}</strong> (${item.ch})<br><span style="color:var(--error)">你的答案: ${item.yourAnswer}</span></div>`).join("");
             } else wrongSection.style.display = "none";
         }
 
@@ -339,4 +313,3 @@
     </script>
 </body>
 </html>
-
