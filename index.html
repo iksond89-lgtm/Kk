@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高中英文單字多冊複習系統</title>
+    <title>高中英文單字多冊複習系統 v2</title>
     <style>
         :root {
             --primary: #4a90e2;
@@ -79,7 +79,7 @@
         .progress { font-size: 14px; color: #7f8c8d; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
         .word-box { text-align: center; margin: 30px 0; }
         .quiz-type-tag { display: inline-block; font-size: 12px; background-color: #ebf8ff; color: #2b6cb0; padding: 4px 12px; border-radius: 12px; margin-bottom: 12px; font-weight: bold; }
-        .word { font-size: 34px; font-weight: 700; color: #1a202c; }
+        .word { font-size: 32px; font-weight: 700; color: #1a202c; word-break: break-word; }
         .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
         
         .option-btn {
@@ -93,10 +93,16 @@
         .next-btn { width: 100%; background-color: var(--primary); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; }
         
         .score-big { font-size: 64px; font-weight: 800; color: var(--primary); margin: 20px 0; text-align: center; }
-        .btn-group { display: flex; gap: 10px; margin-top: 24px; }
-        .btn-group button { flex: 1; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-group { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+        .btn-group button { flex: 1; min-width: 120px; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; }
         .btn-retry { background-color: #edf2f7; color: var(--text); }
         .btn-home { background-color: var(--text); color: white; }
+
+        /* ❌ 錯題本專用樣式 */
+        .wrong-list { text-align: left; background: #fff5f5; border: 1px solid #fed7d7; border-radius: 10px; padding: 15px; margin-top: 20px; max-height: 250px; overflow-y: auto; }
+        .wrong-item { border-bottom: 1px solid #feb2b2; padding: 8px 0; font-size: 15px; }
+        .wrong-item:last-child { border-bottom: none; }
+        .wrong-title { color: #c53030; font-weight: bold; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -132,6 +138,16 @@
             </div>
         </div>
 
+        <div id="mode-screen" class="screen">
+            <h2>⚙️ 選擇測驗模式</h2>
+            <div class="subtitle" id="mode-screen-subtitle">請選擇出題版本</div>
+            <div class="grid-menu" style="grid-template-columns: 1fr;">
+                <button class="menu-btn" onclick="setMode('engToCh')">🔤 英翻中 (看英文選中文)</button>
+                <button class="menu-btn" onclick="setMode('chToEng')">🇹🇼 中翻英 (看中文選英文 + 詞性提示)</button>
+                <button class="menu-btn btn-back" onclick="switchScreen('unit-screen')">⬅ 回到選單元</button>
+            </div>
+        </div>
+
         <div id="quiz-screen" class="screen">
             <div class="header">
                 <div class="title" id="quiz-title">單字大挑戰</div>
@@ -151,6 +167,12 @@
             <p id="stats-text">答對題數：0 / 0</p>
             <div class="score-big" id="final-score">0</div>
             <p id="evaluation-text"></p>
+            
+            <div id="wrong-answers-section" style="display:none;">
+                <div class="wrong-title">❌ 本次錯題紀錄庫：</div>
+                <div class="wrong-list" id="wrong-list-container"></div>
+            </div>
+
             <div class="btn-group">
                 <button class="btn-retry" onclick="retryQuiz()">再測一次</button>
                 <button class="btn-home" onclick="switchScreen('book-screen')">回首頁 🏠</button>
@@ -162,11 +184,22 @@
     <script>
         let selectedBookId = "";
         let selectedUnitNum = 0;
+        let quizMode = "engToCh"; // engToCh 或 chToEng
         let wordList = [];
         let quizQuestions = [];
         let currentIndex = 0;
         let correctAnswersCount = 0;
         let hasAnswered = false;
+        let wrongRecords = []; // 紀錄錯題
+
+        // 自動推算詞性的小幫手
+        function getPosTag(chText) {
+            if (chText.includes("的")) return "[adj. 形容詞]";
+            if (chText.includes("地")) return "[adv. 副詞]";
+            if (chText.includes("使") || chText.includes("讓") || chText.includes("辦")) return "[v. 動詞]";
+            if (chText.includes("；") || chText.length > 3) return "[n./v. 綜合]";
+            return "[n. 名詞]";
+        }
 
         function switchScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -195,29 +228,41 @@
                         return;
                     }
                     wordList = data;
-                    document.getElementById("quiz-title").innerText = `第 ${selectedBookId.replace("b","")} 冊 Unit ${unitNum}`;
-                    startQuiz();
+                    document.getElementById("mode-screen-subtitle").innerText = `已選：第 ${selectedBookId.replace("b","")} 冊 Unit ${unitNum}`;
+                    switchScreen("mode-screen");
                 })
                 .catch(err => {
                     alert(err.message + `\n請確認路徑是否有這個檔案: ${filePath}`);
                 });
         }
 
+        function setMode(mode) {
+            quizMode = mode;
+            document.getElementById("quiz-title").innerText = `第 ${selectedBookId.replace("b","")} 冊 Unit ${selectedUnitNum}`;
+            startQuiz();
+        }
+
         function startQuiz() {
+            wrongRecords = []; // 清空上一次的錯題
             let shuffledLesson = [...wordList].sort(() => 0.5 - Math.random());
 
             quizQuestions = shuffledLesson.map(item => {
-                const isEngToCh = Math.random() > 0.5;
                 let wrongPool = wordList.filter(w => w.eng !== item.eng);
                 let shuffledWrong = wrongPool.sort(() => 0.5 - Math.random());
                 
                 let options = [];
+                let questionText = "";
                 let correctAnswer = "";
 
-                if (isEngToCh) {
+                if (quizMode === "engToCh") {
+                    // 英翻中模式
+                    questionText = item.eng;
                     correctAnswer = item.ch;
                     options = [item.ch, shuffledWrong[0].ch, shuffledWrong[1].ch, shuffledWrong[2].ch];
                 } else {
+                    // 中翻英模式：加上自動詞性標籤提示
+                    let pos = getPosTag(item.ch);
+                    questionText = `${pos} ${item.ch}`;
                     correctAnswer = item.eng;
                     options = [item.eng, shuffledWrong[0].eng, shuffledWrong[1].eng, shuffledWrong[2].eng];
                 }
@@ -225,8 +270,10 @@
                 options.sort(() => 0.5 - Math.random());
 
                 return {
-                    question: isEngToCh ? item.eng : item.ch,
-                    type: isEngToCh ? "請選擇正確的中文意思" : "請選擇正確的英文單字",
+                    rawWord: item.eng,
+                    rawCh: item.ch,
+                    question: questionText,
+                    type: quizMode === "engToCh" ? "請選擇正確的中文意思" : "請選擇正確的英文單字",
                     options: options,
                     answer: correctAnswer
                 };
@@ -277,10 +324,18 @@
                     if (btn.innerText === q.answer) btn.classList.add("correct");
                 }
                 document.getElementById("feedback-text").innerHTML = `<span style="color:var(--error)">❌ 答案是：${q.answer}</span>`;
+                
+                // 儲存錯題紀錄
+                wrongRecords.push({
+                    eng: q.rawWord,
+                    ch: q.rawCh,
+                    yourAnswer: selectedOpt
+                });
             }
             document.getElementById("next-btn").style.display = "block";
         }
 
+        function model-nextQuestion() { /* 注意：綁定的是 nextQuestion */ }
         function nextQuestion() {
             currentIndex++;
             if (currentIndex < quizQuestions.length) {
@@ -300,8 +355,27 @@
             if (finalScore === 100) evalText = "太完美了！完全征服！🏆";
             else if (finalScore >= 80) evalText = "非常厲害！快要全熟了！🔥";
             else if (finalScore >= 60) evalText = "及格囉！繼續加油！👍";
-            
             document.getElementById("evaluation-text").innerText = evalText;
+
+            // 處理錯題顯示
+            const wrongSection = document.getElementById("wrong-answers-section");
+            const wrongContainer = document.getElementById("wrong-list-container");
+            
+            if (wrongRecords.length > 0) {
+                wrongSection.style.display = "block";
+                wrongContainer.innerHTML = "";
+                wrongRecords.forEach((item, index) => {
+                    wrongContainer.innerHTML += `
+                        <div class="wrong-item">
+                            <strong>${index + 1}. ${item.eng}</strong> (${item.ch})<br>
+                            <span style="color:var(--error)">你的答案: ${item.yourAnswer}</span> | 
+                            <span style="color:var(--success)">正確答案: ${quizMode === 'engToCh' ? item.ch : item.eng}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                wrongSection.style.display = "none";
+            }
         }
 
         function retryQuiz() {
@@ -309,4 +383,4 @@
         }
     </script>
 </body>
-</html>
+</ht>
